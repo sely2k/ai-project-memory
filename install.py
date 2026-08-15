@@ -5,6 +5,7 @@
 
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
+DEFAULT_GITHUB_OWNER = "sely2k"
 
 from pathlib import Path
 import re
@@ -38,8 +39,8 @@ def ask(prompt: str, default: str) -> str:
     return value or default
 
 
-def normalize_github_repository(value: str) -> str | None:
-    value = value.strip().removesuffix(".git").rstrip("/")
+def normalize_github_repository(value: str, default_owner: str = DEFAULT_GITHUB_OWNER) -> str | None:
+    value = value.strip().rstrip("/").removesuffix(".git")
     patterns = (
         r"(?:https?://github\.com/|ssh://git@github\.com/|git@github\.com:)([^/]+/[^/]+)$",
         r"([^/\s]+/[^/\s]+)$",
@@ -48,6 +49,8 @@ def normalize_github_repository(value: str) -> str | None:
         match = re.fullmatch(pattern, value)
         if match:
             return match.group(1)
+    if re.fullmatch(r"[^/\s]+", value):
+        return f"{default_owner}/{value}"
     return None
 
 
@@ -62,24 +65,24 @@ def detect_github_repository(target: Path) -> str:
         repository = normalize_github_repository(result.stdout)
         if repository:
             return repository
-    return "owner/repository"
+    return f"{DEFAULT_GITHUB_OWNER}/{target.name}"
 
 
 def ask_repository(target: Path, language: str) -> str:
     default = detect_github_repository(target)
     prompt = (
-        "GitHub repository (owner/repository)"
+        f"GitHub repository (name or owner/name; default owner: {DEFAULT_GITHUB_OWNER})"
         if language == "en"
-        else "Repository GitHub (proprietario/repository)"
+        else f"Repository GitHub (nome o proprietario/nome; proprietario predefinito: {DEFAULT_GITHUB_OWNER})"
     )
     error = (
-        "Enter owner/repository or a complete GitHub URL."
+        "Enter a repository name, owner/repository, or a complete GitHub URL."
         if language == "en"
-        else "Inserisci proprietario/repository oppure un URL GitHub completo."
+        else "Inserisci il nome della repository, proprietario/repository oppure un URL GitHub completo."
     )
     while True:
         repository = normalize_github_repository(ask(prompt, default))
-        if repository and repository != "owner/repository":
+        if repository:
             return repository
         print(error)
 

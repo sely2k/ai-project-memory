@@ -24,7 +24,7 @@ uv run https://raw.githubusercontent.com/sely2k/ai-project-memory/main/install.p
 The installer asks for:
 
 1. Italian or English;
-2. the GitHub repository in `owner/repository` format, detected from the `origin` remote when available;
+2. the GitHub repository, detected from `origin` when available; a bare repository name is automatically prefixed with the default owner `sely2k`;
 3. ChatGPT Project, Claude Project, Claude Code, Codex, GitHub Copilot, or any combination through an interactive checkbox menu.
 
 Use the arrow keys to navigate, Space to select or deselect a tool, and Enter to confirm. All five tools are selected by default.
