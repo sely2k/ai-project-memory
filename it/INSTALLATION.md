@@ -10,8 +10,8 @@ Questa repository contiene file sorgente da distribuire nei progetti target. Cop
 | Claude Code | `it/claude-code/CLAUDE.md` | `.claude/CLAUDE.md` | Copia il file creando `.claude/` se necessario. |
 | OpenAI Codex CLI | `it/codex/AGENTS.md` | `AGENTS.md` | Copia nella root del repository. |
 | GitHub Copilot | `it/copilot/copilot-instructions.md` | `.github/copilot-instructions.md` | Copia il file creando `.github/` se necessario. |
-| ChatGPT Project | `it/chatgpt/instruction.md` | Nessun percorso | Sostituisci `<owner>/<repo>` e incolla il contenuto nelle istruzioni del Project. |
-| Claude Project | `it/claude/instruction.md` | Nessun percorso | Sostituisci `<owner>/<repo>` e incolla il contenuto nelle Project Instructions. |
+| ChatGPT Project | `it/chatgpt/instruction.md` | `repodoc/project-instructions/chatgpt.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle istruzioni del Project. |
+| Claude Project | `it/claude/instruction.md` | `repodoc/project-instructions/claude.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle Project Instructions. |
 
 ## Struttura risultante
 
@@ -22,7 +22,10 @@ Questa repository contiene file sorgente da distribuire nei progetti target. Cop
 ├── .github/
 │   └── copilot-instructions.md
 ├── repodoc/
-│   └── memory-protocol.md
+│   ├── memory-protocol.md
+│   └── project-instructions/
+│       ├── chatgpt.md
+│       └── claude.md
 └── AGENTS.md
 ```
 
@@ -33,8 +36,10 @@ Esegui dalla root di questa repository, sostituendo `<repository-target>` con il
 ```sh
 mkdir -p <repository-target>/.claude \
          <repository-target>/.github \
-         <repository-target>/repodoc
+         <repository-target>/repodoc/project-instructions
 
+cp it/chatgpt/instruction.md <repository-target>/repodoc/project-instructions/chatgpt.md
+cp it/claude/instruction.md <repository-target>/repodoc/project-instructions/claude.md
 cp it/claude-code/CLAUDE.md <repository-target>/.claude/CLAUDE.md
 cp it/codex/AGENTS.md <repository-target>/AGENTS.md
 cp it/copilot/copilot-instructions.md <repository-target>/.github/copilot-instructions.md
@@ -46,4 +51,4 @@ cp it/repodoc/memory-protocol.md <repository-target>/repodoc/memory-protocol.md
 - Claude Code riconosce sia `CLAUDE.md` nella root sia `.claude/CLAUDE.md`; questa repository adotta `.claude/CLAUDE.md`. Poiché gli import `@path` sono relativi al file che li contiene, il wrapper usa `@../repodoc/memory-protocol.md`.
 - Codex carica `AGENTS.md` dalla root e può applicare file aggiuntivi nelle sottodirectory.
 - Copilot usa `.github/copilot-instructions.md` per le istruzioni valide in tutto il repository. Le regole mirate possono essere aggiunte in `.github/instructions/*.instructions.md`.
-- I file per ChatGPT Project e Claude Project si configurano tramite interfaccia e non devono essere copiati in una directory del repository.
+- I file generati per ChatGPT Project e Claude Project sono copie pronte da incollare nelle rispettive interfacce; le applicazioni non li leggono direttamente dal repository.

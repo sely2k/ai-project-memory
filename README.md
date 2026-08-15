@@ -25,9 +25,11 @@ The installer asks for:
 
 1. Italian or English;
 2. the target repository name, defaulting to the current directory name;
-3. Claude Code, Codex, GitHub Copilot, or all three.
+3. ChatGPT Project, Claude Project, Claude Code, Codex, GitHub Copilot, or any combination through an interactive checkbox menu.
 
-It always installs the shared protocol and then the wrappers required by the selected tools. Existing files are never overwritten without confirmation.
+Use the arrow keys to navigate, Space to select or deselect a tool, and Enter to confirm. All five tools are selected by default.
+
+It always installs the shared protocol and then the files required by the selected tools. ChatGPT Project and Claude Project instructions are generated as ready-to-paste files with the repository placeholder already replaced. Existing files are never overwritten without confirmation.
 
 The source repository and branch are configured near the top of [`install.py`](install.py):
 
@@ -52,14 +54,18 @@ When the templates are available beside `install.py`, the installer reads them l
 
 ## Installed layout
 
-Selecting all CLI tools produces:
+Selecting all tools produces:
 
 ```text
 <target-repository>/
 ├── .claude/CLAUDE.md
 ├── .github/copilot-instructions.md
-├── repodoc/memory-protocol.md
+├── repodoc/
+│   ├── memory-protocol.md
+│   └── project-instructions/
+│       ├── chatgpt.md
+│       └── claude.md
 └── AGENTS.md
 ```
 
-ChatGPT Project and Claude Project instructions are not installed by the CLI because they must be pasted into the corresponding project settings. Use `it/chatgpt/instruction.md`, `it/claude/instruction.md`, `en/chatgpt/instruction.md`, or `en/claude/instruction.md`.
+Paste `repodoc/project-instructions/chatgpt.md` and `repodoc/project-instructions/claude.md` into the corresponding project settings. These files are installation artifacts for manual use; the applications do not read them directly from the repository.

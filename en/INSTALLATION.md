@@ -8,8 +8,8 @@ This language package contains the English templates to deploy into a target rep
 | Claude Code | `en/claude-code/CLAUDE.md` | `.claude/CLAUDE.md` | Create `.claude/` if needed. |
 | OpenAI Codex CLI | `en/codex/AGENTS.md` | `AGENTS.md` | Copy to the repository root. |
 | GitHub Copilot | `en/copilot/copilot-instructions.md` | `.github/copilot-instructions.md` | Create `.github/` if needed. |
-| ChatGPT Project | `en/chatgpt/instruction.md` | No filesystem path | Replace `<owner>/<repo>` and paste into Project instructions. |
-| Claude Project | `en/claude/instruction.md` | No filesystem path | Replace `<owner>/<repo>` and paste into Project Instructions. |
+| ChatGPT Project | `en/chatgpt/instruction.md` | `repodoc/project-instructions/chatgpt.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project instructions. |
+| Claude Project | `en/claude/instruction.md` | `repodoc/project-instructions/claude.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project Instructions. |
 
 ## Resulting repository layout
 
@@ -20,7 +20,10 @@ This language package contains the English templates to deploy into a target rep
 ├── .github/
 │   └── copilot-instructions.md
 ├── repodoc/
-│   └── memory-protocol.md
+│   ├── memory-protocol.md
+│   └── project-instructions/
+│       ├── chatgpt.md
+│       └── claude.md
 └── AGENTS.md
 ```
 
@@ -29,4 +32,4 @@ This language package contains the English templates to deploy into a target rep
 - Claude Code supports both root `CLAUDE.md` and `.claude/CLAUDE.md`; this project uses `.claude/CLAUDE.md`. Its import is therefore `@../repodoc/memory-protocol.md`.
 - Codex reads root `AGENTS.md` and may layer additional files from nested directories.
 - Copilot uses `.github/copilot-instructions.md` for repository-wide guidance. Path-specific rules can live under `.github/instructions/*.instructions.md`.
-- ChatGPT and Claude Project instructions are pasted through their interfaces rather than installed in the repository.
+- The generated ChatGPT and Claude Project files are ready-to-paste copies for their respective interfaces; the applications do not read them directly from the repository.
