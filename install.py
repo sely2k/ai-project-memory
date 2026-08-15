@@ -7,6 +7,8 @@ SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 
 from pathlib import Path
+import re
+import subprocess
 import sys
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -34,6 +36,52 @@ def ask(prompt: str, default: str) -> str:
         return value.strip() or default
     value = input(f"{prompt} [{default}]: ").strip()
     return value or default
+
+
+def normalize_github_repository(value: str) -> str | None:
+    value = value.strip().removesuffix(".git").rstrip("/")
+    patterns = (
+        r"(?:https?://github\.com/|ssh://git@github\.com/|git@github\.com:)([^/]+/[^/]+)$",
+        r"([^/\s]+/[^/\s]+)$",
+    )
+    for pattern in patterns:
+        match = re.fullmatch(pattern, value)
+        if match:
+            return match.group(1)
+    return None
+
+
+def detect_github_repository(target: Path) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(target), "remote", "get-url", "origin"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        repository = normalize_github_repository(result.stdout)
+        if repository:
+            return repository
+    return "owner/repository"
+
+
+def ask_repository(target: Path, language: str) -> str:
+    default = detect_github_repository(target)
+    prompt = (
+        "GitHub repository (owner/repository)"
+        if language == "en"
+        else "Repository GitHub (proprietario/repository)"
+    )
+    error = (
+        "Enter owner/repository or a complete GitHub URL."
+        if language == "en"
+        else "Inserisci proprietario/repository oppure un URL GitHub completo."
+    )
+    while True:
+        repository = normalize_github_repository(ask(prompt, default))
+        if repository and repository != "owner/repository":
+            return repository
+        print(error)
 
 
 def choose_language() -> str:
@@ -166,14 +214,12 @@ def confirm_overwrite(path: Path, language: str) -> str:
 
 def render_template(content: str, repository: str, language: str) -> str:
     content = content.replace("<owner>/<repo>", repository)
-    notes = {
-        "en": ("> Replace the placeholder with the target repository before pasting these instructions into the Project.",
-               f"> Repository configured by the installer: `{repository}`."),
-        "it": ("> Sostituire il placeholder con il repository del progetto target prima di incollare queste istruzioni nel Project.",
-               f"> Repository configurata dall'installer: `{repository}`."),
+    placeholder_notes = {
+        "en": "> Replace the placeholder with the target repository before pasting these instructions into the Project.\n\n",
+        "it": "> Sostituire il placeholder con il repository del progetto target prima di incollare queste istruzioni nel Project.\n\n",
     }
-    old_note, new_note = notes[language]
-    return content.replace(old_note, new_note)
+    content = content.replace(placeholder_notes[language], "")
+    return content.replace("`GITHUB_REPOSITORY`", f"`{repository}`")
 
 
 def install_file(source: str, destination: str, language: str, repository: str, target: Path, overwrite_all: bool) -> tuple[bool, bool]:
@@ -195,10 +241,7 @@ def install_file(source: str, destination: str, language: str, repository: str, 
 def main() -> int:
     language = choose_language()
     target = Path.cwd().resolve()
-    repository = ask(
-        "Target repository name (owner/name is preferred)" if language == "en" else "Nome della repository target (preferibilmente owner/nome)",
-        target.name,
-    )
+    repository = ask_repository(target, language)
     tools = choose_tools(language)
 
     print(f"\nTarget: {target}")
