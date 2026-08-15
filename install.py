@@ -45,7 +45,7 @@ def choose_language() -> str:
                 Choice("Italiano", value="it"),
             ],
             default="en",
-            instruction="(↑/↓ move, Enter confirm)",
+            instruction="(↑/↓ to choose • Enter to confirm)",
         ).ask()
         if value is None:
             raise KeyboardInterrupt
@@ -58,19 +58,35 @@ def choose_language() -> str:
         print("Choose 'en' or 'it'. / Scegli 'en' o 'it'.")
 
 
-def choose_tools() -> list[str]:
+def choose_tools(language: str) -> list[str]:
+    labels = {
+        "en": {
+            "prompt": "Which tools do you want to configure?",
+            "instruction": "(↑/↓ move • Space select/deselect • Enter confirm)",
+            "chatgpt-project": "ChatGPT Project  → instructions to paste into a Project",
+            "claude-project": "Claude Project   → instructions to paste into a Project",
+            "claude-code": "Claude Code      → .claude/CLAUDE.md",
+            "codex": "OpenAI Codex     → AGENTS.md",
+            "copilot": "GitHub Copilot   → .github/copilot-instructions.md",
+        },
+        "it": {
+            "prompt": "Quali strumenti vuoi configurare?",
+            "instruction": "(↑/↓ sposta • Spazio seleziona/deseleziona • Invio conferma)",
+            "chatgpt-project": "ChatGPT Project  → istruzioni da incollare nel Project",
+            "claude-project": "Claude Project   → istruzioni da incollare nel Project",
+            "claude-code": "Claude Code      → .claude/CLAUDE.md",
+            "codex": "OpenAI Codex     → AGENTS.md",
+            "copilot": "GitHub Copilot   → .github/copilot-instructions.md",
+        },
+    }[language]
     if sys.stdin.isatty() and sys.stdout.isatty():
         selected = questionary.checkbox(
-            "Select tools / Seleziona gli strumenti",
+            labels["prompt"],
             choices=[
-                Choice("ChatGPT Project", value="chatgpt-project", checked=True),
-                Choice("Claude Project", value="claude-project", checked=True),
-                Choice("Claude Code", value="claude-code", checked=True),
-                Choice("OpenAI Codex", value="codex", checked=True),
-                Choice("GitHub Copilot", value="copilot", checked=True),
+                Choice(labels[tool], value=tool, checked=True) for tool in TOOL_FILES
             ],
             validate=lambda values: bool(values) or "Select at least one tool / Seleziona almeno uno strumento",
-            instruction="(↑/↓ move, Space toggle, Enter confirm)",
+            instruction=labels["instruction"],
         ).ask()
         if selected is None:
             raise KeyboardInterrupt
@@ -130,27 +146,50 @@ def read_template(language: str, relative_path: str) -> str:
         raise RuntimeError(f"Could not download {url}: {error}") from error
 
 
-def confirm_overwrite(path: Path, language: str) -> bool:
-    message = f"{path} exists. Overwrite?" if language == "en" else f"{path} esiste. Sovrascrivere?"
+def confirm_overwrite(path: Path, language: str) -> str:
+    message = f"{path} exists. What do you want to do?" if language == "en" else f"{path} esiste. Cosa vuoi fare?"
+    choices = (
+        [Choice("No — skip this file", value="no"), Choice("Yes — overwrite this file", value="yes"), Choice("All — overwrite this and every following file", value="all")]
+        if language == "en"
+        else [Choice("No — salta questo file", value="no"), Choice("Sì — sovrascrivi questo file", value="yes"), Choice("Tutti — sovrascrivi questo e tutti i successivi", value="all")]
+    )
     if sys.stdin.isatty() and sys.stdout.isatty():
-        answer = questionary.confirm(message, default=False).ask()
+        answer = questionary.select(message, choices=choices, default="no").ask()
         if answer is None:
             raise KeyboardInterrupt
         return answer
-    return input(f"{message} [y/N]: ").strip().lower() in {"y", "yes", "s", "si", "sì"}
+    answer = input(f"{message} [y/N/a]: ").strip().lower()
+    if answer in {"a", "all", "t", "tutti"}:
+        return "all"
+    return "yes" if answer in {"y", "yes", "s", "si", "sì"} else "no"
 
 
-def install_file(source: str, destination: str, language: str, repository: str, target: Path) -> bool:
+def render_template(content: str, repository: str, language: str) -> str:
+    content = content.replace("<owner>/<repo>", repository)
+    notes = {
+        "en": ("> Replace the placeholder with the target repository before pasting these instructions into the Project.",
+               f"> Repository configured by the installer: `{repository}`."),
+        "it": ("> Sostituire il placeholder con il repository del progetto target prima di incollare queste istruzioni nel Project.",
+               f"> Repository configurata dall'installer: `{repository}`."),
+    }
+    old_note, new_note = notes[language]
+    return content.replace(old_note, new_note)
+
+
+def install_file(source: str, destination: str, language: str, repository: str, target: Path, overwrite_all: bool) -> tuple[bool, bool]:
     destination_path = target / destination
-    if destination_path.exists() and not confirm_overwrite(destination_path, language):
-        print(f"Skipped: {destination_path}")
-        return False
+    if destination_path.exists() and not overwrite_all:
+        overwrite = confirm_overwrite(destination_path, language)
+        if overwrite == "no":
+            print(f"Skipped: {destination_path}")
+            return False, overwrite_all
+        overwrite_all = overwrite == "all"
 
-    content = read_template(language, source).replace("<owner>/<repo>", repository)
+    content = render_template(read_template(language, source), repository, language)
     destination_path.parent.mkdir(parents=True, exist_ok=True)
     destination_path.write_text(content, encoding="utf-8", newline="\n")
     print(f"Installed: {destination_path}")
-    return True
+    return True, overwrite_all
 
 
 def main() -> int:
@@ -160,7 +199,7 @@ def main() -> int:
         "Target repository name (owner/name is preferred)" if language == "en" else "Nome della repository target (preferibilmente owner/nome)",
         target.name,
     )
-    tools = choose_tools()
+    tools = choose_tools(language)
 
     print(f"\nTarget: {target}")
     print(f"Repository: {repository}")
@@ -168,11 +207,14 @@ def main() -> int:
     print(f"Tools: {', '.join(tools)}\n")
 
     installed = 0
+    overwrite_all = False
     protocol_source, protocol_destination = PROTOCOL
-    installed += install_file(protocol_source, protocol_destination, language, repository, target)
+    was_installed, overwrite_all = install_file(protocol_source, protocol_destination, language, repository, target, overwrite_all)
+    installed += was_installed
     for tool in tools:
         source, destination = TOOL_FILES[tool]
-        installed += install_file(source, destination, language, repository, target)
+        was_installed, overwrite_all = install_file(source, destination, language, repository, target, overwrite_all)
+        installed += was_installed
 
     print(f"\nDone. {installed} file(s) installed.")
     return 0
