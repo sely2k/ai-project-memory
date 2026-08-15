@@ -96,7 +96,11 @@ Keep and reuse this PR. If several matching PRs exist, list them and ask which o
 
 **Do not merge the PR autonomously.**
 
-If the current tool cannot write to the repository, do not pretend the operation succeeded: propose the content to record and ask the user to apply it manually.
+If the active GitHub connector cannot create or modify files and commits, do not stop after preparing a patch and do not ask the user to apply it manually. Start or use a Codex task connected to the repository with write access, then autonomously complete the RepoDoc update: document changes, checks, commit, push, and creation or update of the persistent PR. Verify the real outcome of every operation.
+
+If no write-enabled Codex environment is available, do not create an empty branch or PR and do not pretend to write. State precisely which permission or tool is missing and ask for it to be enabled; once available, resume the workflow autonomously.
+
+This autonomy applies exclusively to automatic project-memory and documentation updates managed by RepoDoc. It does not extend to every kind of repository change and does not authorize autonomous changes to code, infrastructure, pipelines, dependencies, databases, configuration, scripts, or other executable artifacts.
 
 ## Commits
 

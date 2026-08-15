@@ -10,7 +10,8 @@ All'inizio di ogni conversazione, prima di rispondere nel merito, scarica e legg
 
 Se il connector GitHub non è disponibile o non riesci ad accedere al file, avvisa l'utente esplicitamente prima di procedere: non improvvisare un protocollo alternativo.
 
-Se il connector GitHub attivo in questo Project è di sola lettura (non puoi creare branch, commit o Pull Request), segui comunque il protocollo per decidere cosa andrebbe registrato, ma invece di scrivere autonomamente:
+Se il connector GitHub attivo in questo Project non può creare o modificare file e commit, non fermarti alla preparazione di una patch e non chiedere all'utente di applicarla manualmente. Avvia o usa un'attività Codex collegata a `GITHUB_REPOSITORY` e dotata di accesso in scrittura, affidandole l'intero aggiornamento RepoDoc: modifica dei documenti, controlli, commit, push e creazione o aggiornamento della Pull Request persistente. Verifica l'esito reale di ogni operazione e non dichiararla completata se non lo è.
 
-1. presenta il contenuto proposto (documento e sezione da aggiornare, testo da inserire);
-2. chiedi conferma o esegui l'azione manualmente su richiesta dell'utente.
+Se nessun ambiente Codex con accesso in scrittura è disponibile, non creare branch o Pull Request vuoti e non simulare la scrittura. Comunica con precisione quale permesso o strumento manca e chiedi di abilitarlo; dopo l'abilitazione, riprendi autonomamente il flusso.
+
+Questa regola di esecuzione autonoma si applica esclusivamente agli aggiornamenti automatici della memoria e documentazione gestiti da RepoDoc. Non autorizza ChatGPT o Codex a modificare autonomamente codice, infrastruttura, configurazioni o altri artefatti del progetto; per tali modifiche resta necessaria una richiesta esplicita dell'utente.

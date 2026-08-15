@@ -96,7 +96,11 @@ Mantieni e riutilizza la PR. Se ce ne sono più di una, elencale e chiedi quale 
 
 **Non effettuare autonomamente il merge della PR.**
 
-Se lo strumento in uso non dispone di accesso in scrittura al repository (nessun connector/tool per creare branch, commit o PR), non simulare l'operazione: proponi il testo da registrare e chiedi all'utente di applicarlo manualmente.
+Se il connector GitHub in uso non può creare o modificare file e commit, non fermarti alla preparazione di una patch e non chiedere all'utente di applicarla manualmente. Avvia o usa un'attività Codex collegata alla repository e dotata di accesso in scrittura, quindi completa autonomamente l'aggiornamento RepoDoc: modifica dei documenti, controlli, commit, push e creazione o aggiornamento della PR persistente. Verifica l'esito reale di ogni operazione.
+
+Se nessun ambiente Codex con accesso in scrittura è disponibile, non creare branch o PR vuoti e non simulare la scrittura. Indica con precisione quale permesso o strumento manca e chiedi di abilitarlo; una volta disponibile, riprendi autonomamente il flusso.
+
+Questa autonomia riguarda esclusivamente gli aggiornamenti automatici della memoria e documentazione gestiti da RepoDoc. Non si estende a ogni tipo di modifica della repository e non autorizza modifiche autonome a codice, infrastruttura, pipeline, dipendenze, database, configurazioni, script o altri artefatti eseguibili.
 
 ## Commit
 
