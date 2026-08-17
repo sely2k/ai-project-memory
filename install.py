@@ -179,12 +179,20 @@ def choose_tools(language: str) -> list[str]:
         print("Choose 1, 2, 3, 4, 5, 6, or a comma-separated list.")
 
 
-def raw_base_url() -> str:
+def source_coordinates() -> tuple[str, str]:
     parsed = urlparse(SOURCE_REPOSITORY.rstrip("/"))
     parts = parsed.path.strip("/").removesuffix(".git").split("/")
     if parsed.netloc != "github.com" or len(parts) != 2 or "<" in SOURCE_REPOSITORY:
         raise ValueError("Set SOURCE_REPOSITORY to a GitHub URL such as https://github.com/owner/repo")
-    return f"https://raw.githubusercontent.com/{parts[0]}/{parts[1]}/{SOURCE_BRANCH}"
+    return parts[0], parts[1]
+
+
+def template_base_urls() -> tuple[str, ...]:
+    owner, repository = source_coordinates()
+    return (
+        f"https://cdn.jsdelivr.net/gh/{owner}/{repository}@{SOURCE_BRANCH}",
+        f"https://raw.githubusercontent.com/{owner}/{repository}/{SOURCE_BRANCH}",
+    )
 
 
 def read_template(language: str, relative_path: str) -> str:
@@ -192,12 +200,15 @@ def read_template(language: str, relative_path: str) -> str:
     if local_path.is_file():
         return local_path.read_text(encoding="utf-8")
 
-    url = f"{raw_base_url()}/{language}/{relative_path}"
-    try:
-        with urlopen(url, timeout=30) as response:
-            return response.read().decode("utf-8")
-    except (HTTPError, URLError) as error:
-        raise RuntimeError(f"Could not download {url}: {error}") from error
+    errors = []
+    for base_url in template_base_urls():
+        url = f"{base_url}/{language}/{relative_path}"
+        try:
+            with urlopen(url, timeout=30) as response:
+                return response.read().decode("utf-8")
+        except (HTTPError, URLError) as error:
+            errors.append(f"{url}: {error}")
+    raise RuntimeError("Could not download template from any source:\n- " + "\n- ".join(errors))
 
 
 def confirm_overwrite(path: Path, language: str) -> str:

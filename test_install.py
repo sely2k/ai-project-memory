@@ -6,6 +6,12 @@ import install
 
 
 class ManagedInstructionTests(unittest.TestCase):
+    def test_remote_templates_use_cdn_with_github_fallback(self):
+        urls = install.template_base_urls()
+
+        self.assertEqual(urls[0], "https://cdn.jsdelivr.net/gh/sely2k/ai-project-memory@main")
+        self.assertEqual(urls[1], "https://raw.githubusercontent.com/sely2k/ai-project-memory/main")
+
     def test_adds_block_without_replacing_existing_content(self):
         existing = "# Existing instructions\n\nKeep this rule.\n"
         merged, action = install.merge_managed_content(existing, "# RepoDoc\n\nRead the protocol.\n")
