@@ -27,6 +27,9 @@ TOOL_FILES = {
     "copilot": ("copilot/copilot-instructions.md", ".github/copilot-instructions.md"),
 }
 PROTOCOL = ("repodoc/memory-protocol.md", "repodoc/memory-protocol.md")
+MANAGED_TOOLS = {"claude-code", "codex", "copilot"}
+MANAGED_BLOCK_START = "<!-- repodoc:start -->"
+MANAGED_BLOCK_END = "<!-- repodoc:end -->"
 
 
 def ask(prompt: str, default: str) -> str:
@@ -241,6 +244,51 @@ def install_file(source: str, destination: str, language: str, repository: str, 
     return True, overwrite_all
 
 
+def managed_block(content: str) -> str:
+    return f"{MANAGED_BLOCK_START}\n{content.strip()}\n{MANAGED_BLOCK_END}\n"
+
+
+def merge_managed_content(existing: str, content: str) -> tuple[str, str]:
+    block = managed_block(content)
+    start_count = existing.count(MANAGED_BLOCK_START)
+    end_count = existing.count(MANAGED_BLOCK_END)
+    if start_count != end_count or start_count > 1:
+        raise RuntimeError("RepoDoc managed block markers are missing or duplicated")
+
+    if start_count == 1:
+        pattern = re.compile(
+            rf"{re.escape(MANAGED_BLOCK_START)}.*?{re.escape(MANAGED_BLOCK_END)}(?:\r?\n)?",
+            re.DOTALL,
+        )
+        return pattern.sub(block, existing, count=1), "Updated"
+
+    separator = "" if not existing or existing.endswith(("\n\n", "\r\n\r\n")) else "\n"
+    return f"{existing}{separator}{block}", "Added RepoDoc instructions to"
+
+
+def install_managed_file(source: str, destination: str, language: str, repository: str, target: Path) -> bool:
+    destination_path = target / destination
+    content = render_template(read_template(language, source), repository, language)
+    destination_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if destination_path.exists():
+        existing = destination_path.read_text(encoding="utf-8")
+        # Upgrade files created by older installer versions without duplicating them.
+        if existing.strip() == content.strip():
+            merged, action = managed_block(content), "Updated"
+        else:
+            try:
+                merged, action = merge_managed_content(existing, content)
+            except RuntimeError as error:
+                raise RuntimeError(f"Cannot safely update {destination_path}: {error}") from error
+    else:
+        merged, action = managed_block(content), "Installed"
+
+    destination_path.write_text(merged, encoding="utf-8", newline="\n")
+    print(f"{action}: {destination_path}")
+    return True
+
+
 def main() -> int:
     language = choose_language()
     target = Path.cwd().resolve()
@@ -259,7 +307,10 @@ def main() -> int:
     installed += was_installed
     for tool in tools:
         source, destination = TOOL_FILES[tool]
-        was_installed, overwrite_all = install_file(source, destination, language, repository, target, overwrite_all)
+        if tool in MANAGED_TOOLS:
+            was_installed = install_managed_file(source, destination, language, repository, target)
+        else:
+            was_installed, overwrite_all = install_file(source, destination, language, repository, target, overwrite_all)
         installed += was_installed
 
     print(f"\nDone. {installed} file(s) installed.")

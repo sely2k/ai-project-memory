@@ -29,7 +29,7 @@ The installer asks for:
 
 Use the arrow keys to navigate, Space to select or deselect a tool, and Enter to confirm. All five tools are selected by default.
 
-It always installs the shared protocol and then the files required by the selected tools. ChatGPT Project and Claude Project instructions are generated as ready-to-paste files with repository placeholders and related setup notes already updated. For an existing file, choose whether to skip it, overwrite it, or overwrite it and all following files.
+It always installs the shared protocol and then the files required by the selected tools. ChatGPT Project and Claude Project instructions are generated as ready-to-paste files with repository placeholders and related setup notes already updated. Existing `AGENTS.md`, `.claude/CLAUDE.md`, and `.github/copilot-instructions.md` files are preserved: the installer adds or updates only a delimited RepoDoc-managed block. For other existing files, choose whether to skip them, overwrite them, or overwrite them and all following files.
 
 The source repository and branch are configured near the top of [`install.py`](install.py):
 

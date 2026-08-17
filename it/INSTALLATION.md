@@ -48,6 +48,7 @@ cp it/repodoc/memory-protocol.md <repository-target>/repodoc/memory-protocol.md
 
 ## Note
 
+- L'installer non sovrascrive eventuali istruzioni già presenti in `AGENTS.md`, `.claude/CLAUDE.md` o `.github/copilot-instructions.md`: aggiunge un blocco delimitato da `<!-- repodoc:start -->` e `<!-- repodoc:end -->`, aggiornando solo quel blocco nelle esecuzioni successive.
 - Claude Code riconosce sia `CLAUDE.md` nella root sia `.claude/CLAUDE.md`; questa repository adotta `.claude/CLAUDE.md`. Poiché gli import `@path` sono relativi al file che li contiene, il wrapper usa `@../repodoc/memory-protocol.md`.
 - Codex carica `AGENTS.md` dalla root e può applicare file aggiuntivi nelle sottodirectory.
 - Copilot usa `.github/copilot-instructions.md` per le istruzioni valide in tutto il repository. Le regole mirate possono essere aggiunte in `.github/instructions/*.instructions.md`.

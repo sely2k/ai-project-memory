@@ -29,6 +29,7 @@ This language package contains the English templates to deploy into a target rep
 
 ## Notes
 
+- The installer does not overwrite instructions already present in `AGENTS.md`, `.claude/CLAUDE.md`, or `.github/copilot-instructions.md`: it adds a block delimited by `<!-- repodoc:start -->` and `<!-- repodoc:end -->`, then updates only that block on later runs.
 - Claude Code supports both root `CLAUDE.md` and `.claude/CLAUDE.md`; this project uses `.claude/CLAUDE.md`. Its import is therefore `@../repodoc/memory-protocol.md`.
 - Codex reads root `AGENTS.md` and may layer additional files from nested directories.
 - Copilot uses `.github/copilot-instructions.md` for repository-wide guidance. Path-specific rules can live under `.github/instructions/*.instructions.md`.
