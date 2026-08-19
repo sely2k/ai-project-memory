@@ -18,10 +18,10 @@ The language packages are under [`it/`](it/INSTALLATION.md) and [`en/`](en/INSTA
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), open a terminal in the repository you want to configure, and run:
 
 ```sh
-uv run https://cdn.jsdelivr.net/gh/sely2k/ai-project-memory@main/install.py
+uv run https://raw.githubusercontent.com/sely2k/ai-project-memory/main/install.py
 ```
 
-The jsDelivr URL avoids GitHub Raw's unauthenticated rate limit. The installer uses the same CDN for remote templates and falls back to GitHub Raw if the CDN is temporarily unavailable.
+The command downloads the installer directly from the repository through GitHub Raw.
 
 The installer asks for:
 

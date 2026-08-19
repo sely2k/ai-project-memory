@@ -6,6 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
+REPODOC_VERSION = "1.0.0"
 
 from pathlib import Path
 import re
@@ -29,6 +30,7 @@ TOOL_FILES = {
 PROTOCOL = ("repodoc/memory-protocol.md", "repodoc/memory-protocol.md")
 MANAGED_TOOLS = {"claude-code", "codex", "copilot"}
 MANAGED_BLOCK_START = "<!-- repodoc:start -->"
+MANAGED_BLOCK_VERSION = f"<!-- repodoc:version {REPODOC_VERSION} -->"
 MANAGED_BLOCK_END = "<!-- repodoc:end -->"
 
 
@@ -256,7 +258,13 @@ def install_file(source: str, destination: str, language: str, repository: str, 
 
 
 def managed_block(content: str) -> str:
-    return f"{MANAGED_BLOCK_START}\n{content.strip()}\n{MANAGED_BLOCK_END}\n"
+    content = re.sub(r"\A\s*<!--.*?-->\s*", "", content, count=1, flags=re.DOTALL)
+    return (
+        f"{MANAGED_BLOCK_START}\n"
+        f"{MANAGED_BLOCK_VERSION}\n"
+        f"{content.strip()}\n"
+        f"{MANAGED_BLOCK_END}\n"
+    )
 
 
 def merge_managed_content(existing: str, content: str) -> tuple[str, str]:

@@ -14,11 +14,14 @@ class ManagedInstructionTests(unittest.TestCase):
 
     def test_adds_block_without_replacing_existing_content(self):
         existing = "# Existing instructions\n\nKeep this rule.\n"
-        merged, action = install.merge_managed_content(existing, "# RepoDoc\n\nRead the protocol.\n")
+        content = "<!--\nTemplate comments.\n-->\n\n# RepoDoc\n\nRead the protocol.\n"
+        merged, action = install.merge_managed_content(existing, content)
 
         self.assertTrue(merged.startswith(existing))
         self.assertIn("Keep this rule.", merged)
         self.assertEqual(merged.count(install.MANAGED_BLOCK_START), 1)
+        self.assertIn(f"{install.MANAGED_BLOCK_START}\n{install.MANAGED_BLOCK_VERSION}\n# RepoDoc", merged)
+        self.assertNotIn("Template comments.", merged)
         self.assertEqual(action, "Added RepoDoc instructions to")
 
     def test_updates_only_the_managed_block(self):
@@ -29,6 +32,7 @@ class ManagedInstructionTests(unittest.TestCase):
         self.assertNotIn("Old RepoDoc content", updated)
         self.assertIn("New RepoDoc content", updated)
         self.assertEqual(updated.count(install.MANAGED_BLOCK_START), 1)
+        self.assertEqual(updated.count(install.MANAGED_BLOCK_VERSION), 1)
         self.assertEqual(action, "Updated")
 
     def test_rejects_malformed_markers(self):
