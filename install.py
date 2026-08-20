@@ -27,7 +27,16 @@ TOOL_FILES = {
     "codex": ("codex/AGENTS.md", "AGENTS.md"),
     "copilot": ("copilot/copilot-instructions.md", ".github/copilot-instructions.md"),
 }
-PROTOCOL = ("repodoc/memory-protocol.md", "repodoc/memory-protocol.md")
+# Tools whose instructions currently hardcode the GitHub flow and cannot yet
+# target another backend.
+GITHUB_ONLY_TOOLS = {"chatgpt-project", "claude-project"}
+PROTOCOL_CORE = "repodoc/memory-protocol-core.md"
+PROTOCOL_DESTINATION = "repodoc/memory-protocol.md"
+BACKENDS = {
+    "github": "repodoc/backends/github.md",
+    "google-docs": "repodoc/backends/google-docs.md",
+    "notion": "repodoc/backends/notion.md",
+}
 MANAGED_TOOLS = {"claude-code", "codex", "copilot"}
 MANAGED_BLOCK_START = "<!-- repodoc:start -->"
 MANAGED_BLOCK_VERSION = f"<!-- repodoc:version {REPODOC_VERSION} -->"
@@ -92,6 +101,70 @@ def ask_repository(target: Path, language: str) -> str:
         print(error)
 
 
+def choose_backend(language: str) -> str:
+    labels = {
+        "en": {
+            "prompt": "Where should persistent memory live? (choose one)",
+            "instruction": "(↑/↓ to choose • Enter to confirm)",
+            "github": "GitHub       → a repository, pull-request based",
+            "google-docs": "Google Docs  → a Drive folder (preview: parameters only, no live writes yet)",
+            "notion": "Notion       → a page (preview: parameters only, no live writes yet)",
+        },
+        "it": {
+            "prompt": "Dove deve vivere la memoria persistente? (scegline una)",
+            "instruction": "(↑/↓ sposta • Invio conferma)",
+            "github": "GitHub       → una repository, basato su pull request",
+            "google-docs": "Google Docs  → una cartella Drive (anteprima: solo parametri, scrittura reale non ancora attiva)",
+            "notion": "Notion       → una pagina (anteprima: solo parametri, scrittura reale non ancora attiva)",
+        },
+    }[language]
+    if sys.stdin.isatty() and sys.stdout.isatty():
+        value = questionary.select(
+            labels["prompt"],
+            choices=[
+                Choice(labels["github"], value="github"),
+                Choice(labels["google-docs"], value="google-docs"),
+                Choice(labels["notion"], value="notion"),
+            ],
+            default="github",
+            instruction=labels["instruction"],
+        ).ask()
+        if value is None:
+            raise KeyboardInterrupt
+        return value
+
+    print("Backend: 1) GitHub  2) Google Docs  3) Notion" if language == "en" else "Backend: 1) GitHub  2) Google Docs  3) Notion")
+    aliases = {"1": "github", "github": "github", "2": "google-docs", "google-docs": "google-docs", "gdoc": "google-docs", "3": "notion", "notion": "notion"}
+    prompt = "Select backend" if language == "en" else "Seleziona il backend"
+    error = "Choose 1, 2, or 3." if language == "en" else "Scegli 1, 2 o 3."
+    while True:
+        value = ask(prompt, "1").strip().lower()
+        backend = aliases.get(value)
+        if backend:
+            return backend
+        print(error)
+
+
+def ask_google_drive_folder(language: str) -> str:
+    prompt = "Google Drive folder (name, path, or URL)" if language == "en" else "Cartella Google Drive (nome, percorso o URL)"
+    error = "Enter a folder name, path, or URL." if language == "en" else "Inserisci un nome, percorso o URL della cartella."
+    while True:
+        value = ask(prompt, "").strip()
+        if value:
+            return value
+        print(error)
+
+
+def ask_notion_page(language: str) -> str:
+    prompt = "Notion parent page (name or URL)" if language == "en" else "Pagina Notion di riferimento (nome o URL)"
+    error = "Enter a page name or URL." if language == "en" else "Inserisci un nome o URL della pagina."
+    while True:
+        value = ask(prompt, "").strip()
+        if value:
+            return value
+        print(error)
+
+
 def choose_language() -> str:
     if sys.stdin.isatty() and sys.stdout.isatty():
         value = questionary.select(
@@ -114,7 +187,17 @@ def choose_language() -> str:
         print("Choose 'en' or 'it'. / Scegli 'en' o 'it'.")
 
 
-def choose_tools(language: str) -> list[str]:
+def choose_tools(language: str, backend: str) -> list[str]:
+    available_tools = TOOL_FILES if backend == "github" else {
+        tool: paths for tool, paths in TOOL_FILES.items() if tool not in GITHUB_ONLY_TOOLS
+    }
+    if backend != "github":
+        message = (
+            f"ChatGPT Project and Claude Project instructions still assume a GitHub backend and are skipped for '{backend}'."
+            if language == "en"
+            else f"Le istruzioni per ChatGPT Project e Claude Project assumono ancora un backend GitHub e non sono disponibili per '{backend}'."
+        )
+        print(message)
     labels = {
         "en": {
             "prompt": "Which tools do you want to configure?",
@@ -139,7 +222,7 @@ def choose_tools(language: str) -> list[str]:
         selected = questionary.checkbox(
             labels["prompt"],
             choices=[
-                Choice(labels[tool], value=tool, checked=True) for tool in TOOL_FILES
+                Choice(labels[tool], value=tool, checked=True) for tool in available_tools
             ],
             validate=lambda values: bool(values) or "Select at least one tool / Seleziona almeno uno strumento",
             instruction=labels["instruction"],
@@ -162,11 +245,12 @@ def choose_tools(language: str) -> list[str]:
         "codex": "codex",
         "copilot": "copilot",
     }
+    aliases = {alias: tool for alias, tool in aliases.items() if tool in available_tools}
     print("Tools: 1) ChatGPT Project  2) Claude Project  3) Claude Code  4) Codex  5) GitHub Copilot  6) All")
     while True:
         value = ask("Select tools (comma-separated)", "6").lower()
         if value in {"6", "all", "tutti"}:
-            return list(TOOL_FILES)
+            return list(available_tools)
         selected: list[str] = []
         valid = True
         for item in value.replace(" ", "").split(","):
@@ -231,17 +315,26 @@ def confirm_overwrite(path: Path, language: str) -> str:
     return "yes" if answer in {"y", "yes", "s", "si", "sì"} else "no"
 
 
-def render_template(content: str, repository: str, language: str) -> str:
-    content = content.replace("<owner>/<repo>", repository)
+def render_template(content: str, replacements: dict[str, str], language: str) -> str:
+    for placeholder, value in replacements.items():
+        content = content.replace(f"`{placeholder}`", f"`{value}`")
+        content = content.replace(f"<{placeholder}>", value)
+    if "GITHUB_REPOSITORY" in replacements:
+        content = content.replace("<owner>/<repo>", replacements["GITHUB_REPOSITORY"])
     placeholder_notes = {
         "en": "> Replace the placeholder with the target repository before pasting these instructions into the Project.\n\n",
         "it": "> Sostituire il placeholder con il repository del progetto target prima di incollare queste istruzioni nel Project.\n\n",
     }
-    content = content.replace(placeholder_notes[language], "")
-    return content.replace("`GITHUB_REPOSITORY`", f"`{repository}`")
+    return content.replace(placeholder_notes[language], "")
 
 
-def install_file(source: str, destination: str, language: str, repository: str, target: Path, overwrite_all: bool) -> tuple[bool, bool]:
+def compose_protocol(language: str, backend: str) -> str:
+    core = read_template(language, PROTOCOL_CORE)
+    fragment = read_template(language, BACKENDS[backend])
+    return f"{core.rstrip()}\n\n{fragment.strip()}\n"
+
+
+def write_installed_file(destination: str, content: str, language: str, target: Path, overwrite_all: bool) -> tuple[bool, bool]:
     destination_path = target / destination
     if destination_path.exists() and not overwrite_all:
         overwrite = confirm_overwrite(destination_path, language)
@@ -250,11 +343,15 @@ def install_file(source: str, destination: str, language: str, repository: str, 
             return False, overwrite_all
         overwrite_all = overwrite == "all"
 
-    content = render_template(read_template(language, source), repository, language)
     destination_path.parent.mkdir(parents=True, exist_ok=True)
     destination_path.write_text(content, encoding="utf-8", newline="\n")
     print(f"Installed: {destination_path}")
     return True, overwrite_all
+
+
+def install_file(source: str, destination: str, language: str, replacements: dict[str, str], target: Path, overwrite_all: bool) -> tuple[bool, bool]:
+    content = render_template(read_template(language, source), replacements, language)
+    return write_installed_file(destination, content, language, target, overwrite_all)
 
 
 def managed_block(content: str) -> str:
@@ -285,9 +382,9 @@ def merge_managed_content(existing: str, content: str) -> tuple[str, str]:
     return f"{existing}{separator}{block}", "Added RepoDoc instructions to"
 
 
-def install_managed_file(source: str, destination: str, language: str, repository: str, target: Path) -> bool:
+def install_managed_file(source: str, destination: str, language: str, replacements: dict[str, str], target: Path) -> bool:
     destination_path = target / destination
-    content = render_template(read_template(language, source), repository, language)
+    content = render_template(read_template(language, source), replacements, language)
     destination_path.parent.mkdir(parents=True, exist_ok=True)
 
     if destination_path.exists():
@@ -311,25 +408,37 @@ def install_managed_file(source: str, destination: str, language: str, repositor
 def main() -> int:
     language = choose_language()
     target = Path.cwd().resolve()
-    repository = ask_repository(target, language)
-    tools = choose_tools(language)
+    backend = choose_backend(language)
+    if backend == "github":
+        repository = ask_repository(target, language)
+        replacements = {"GITHUB_REPOSITORY": repository}
+        backend_summary = repository
+    elif backend == "google-docs":
+        folder = ask_google_drive_folder(language)
+        replacements = {"GOOGLE_DRIVE_FOLDER": folder}
+        backend_summary = folder
+    else:
+        page = ask_notion_page(language)
+        replacements = {"NOTION_PARENT_PAGE": page}
+        backend_summary = page
+    tools = choose_tools(language, backend)
 
     print(f"\nTarget: {target}")
-    print(f"Repository: {repository}")
+    print(f"Backend: {backend} ({backend_summary})")
     print(f"Language: {language}")
     print(f"Tools: {', '.join(tools)}\n")
 
     installed = 0
     overwrite_all = False
-    protocol_source, protocol_destination = PROTOCOL
-    was_installed, overwrite_all = install_file(protocol_source, protocol_destination, language, repository, target, overwrite_all)
+    protocol_content = render_template(compose_protocol(language, backend), replacements, language)
+    was_installed, overwrite_all = write_installed_file(PROTOCOL_DESTINATION, protocol_content, language, target, overwrite_all)
     installed += was_installed
     for tool in tools:
         source, destination = TOOL_FILES[tool]
         if tool in MANAGED_TOOLS:
-            was_installed = install_managed_file(source, destination, language, repository, target)
+            was_installed = install_managed_file(source, destination, language, replacements, target)
         else:
-            was_installed, overwrite_all = install_file(source, destination, language, repository, target, overwrite_all)
+            was_installed, overwrite_all = install_file(source, destination, language, replacements, target, overwrite_all)
         installed += was_installed
 
     print(f"\nDone. {installed} file(s) installed.")

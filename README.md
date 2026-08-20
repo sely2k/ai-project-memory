@@ -26,10 +26,11 @@ The command downloads the installer directly from the repository through GitHub 
 The installer asks for:
 
 1. Italian or English;
-2. the GitHub repository, detected from `origin` when available; a bare repository name is automatically prefixed with the default owner `sely2k`;
-3. ChatGPT Project, Claude Project, Claude Code, Codex, GitHub Copilot, or any combination through an interactive checkbox menu.
+2. the memory backend — GitHub, Google Docs, or Notion (only one; Google Docs and Notion are currently preview: the installer collects the target folder/page but does not yet write to them);
+3. the backend-specific target: the GitHub repository (detected from `origin` when available; a bare repository name is automatically prefixed with the default owner `sely2k`), the Google Drive folder, or the Notion parent page;
+4. ChatGPT Project, Claude Project, Claude Code, Codex, GitHub Copilot, or any combination through an interactive checkbox menu. ChatGPT Project and Claude Project are only offered when the backend is GitHub.
 
-Use the arrow keys to navigate, Space to select or deselect a tool, and Enter to confirm. All five tools are selected by default.
+Use the arrow keys to navigate, Space to select or deselect a tool, and Enter to confirm. All available tools are selected by default.
 
 It always installs the shared protocol and then the files required by the selected tools. ChatGPT Project and Claude Project instructions are generated as ready-to-paste files with repository placeholders and related setup notes already updated. Existing `AGENTS.md`, `.claude/CLAUDE.md`, and `.github/copilot-instructions.md` files are preserved: the installer adds or updates only a delimited RepoDoc-managed block. For other existing files, choose whether to skip them, overwrite them, or overwrite them and all following files.
 

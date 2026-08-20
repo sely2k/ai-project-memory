@@ -45,7 +45,7 @@ class ManagedInstructionTests(unittest.TestCase):
             agents = target / "AGENTS.md"
             agents.write_text("# Team rules\n\nNever remove this.\n", encoding="utf-8")
 
-            install.install_managed_file("codex/AGENTS.md", "AGENTS.md", "en", "owner/repo", target)
+            install.install_managed_file("codex/AGENTS.md", "AGENTS.md", "en", {"GITHUB_REPOSITORY": "owner/repo"}, target)
 
             result = agents.read_text(encoding="utf-8")
             self.assertIn("Never remove this.", result)
