@@ -1,3 +1,5 @@
+<!-- repodoc:version 1.1.0 -->
+
 # Persistent memory protocol
 
 This is the protocol's single source of truth. Do not duplicate it elsewhere: the other files in this language package must only reference it.

@@ -12,16 +12,16 @@ GITHUB_REPOSITORY: <owner>/<repo>
 |---|---|
 | `README` | `README.md` |
 | `AGENTS` | `AGENTS.md` |
-| `index` | `repo-docs/index.md` |
-| `project` | `repo-docs/project.md` |
-| `architecture` | `repo-docs/architecture.md` |
-| `glossary` | `repo-docs/glossary.md` |
-| `REQ-xxx-<title>` | `repo-docs/requirement/REQ-xxx-<title>.md` |
-| `OPEN-xxx-<title>` | `repo-docs/openpoint/OPEN-xxx-<title>.md` |
-| `ADR-xxx-<title>` | `repo-docs/decisions/ADR-xxx-<title>.md` |
-| `specs` | `repo-docs/specs/` |
-| `research` | `repo-docs/research/` |
-| `knowledge` | `repo-docs/knowledge/` |
+| `index` | `repodoc/index.md` |
+| `project` | `repodoc/project.md` |
+| `architecture` | `repodoc/architecture.md` |
+| `glossary` | `repodoc/glossary.md` |
+| `REQ-xxx-<title>` | `repodoc/requirement/REQ-xxx-<title>.md` |
+| `OPEN-xxx-<title>` | `repodoc/openpoint/OPEN-xxx-<title>.md` |
+| `ADR-xxx-<title>` | `repodoc/decisions/ADR-xxx-<title>.md` |
+| `specs` | `repodoc/specs/` |
+| `research` | `repodoc/research/` |
+| `knowledge` | `repodoc/knowledge/` |
 
 ### Collegamenti
 

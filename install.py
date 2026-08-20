@@ -6,7 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
-REPODOC_VERSION = "1.0.0"
+REPODOC_VERSION = "1.1.0"
 
 from pathlib import Path
 import re
@@ -351,6 +351,7 @@ def write_installed_file(destination: str, content: str, language: str, target: 
 
 def install_file(source: str, destination: str, language: str, replacements: dict[str, str], target: Path, overwrite_all: bool) -> tuple[bool, bool]:
     content = render_template(read_template(language, source), replacements, language)
+    content = f"<!-- repodoc:version {REPODOC_VERSION} -->\n\n{content}"
     return write_installed_file(destination, content, language, target, overwrite_all)
 
 

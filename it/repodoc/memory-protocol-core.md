@@ -1,3 +1,5 @@
+<!-- repodoc:version 1.1.0 -->
+
 # Protocollo di memoria persistente
 
 Fonte unica di verità del protocollo. Non duplicare questo contenuto altrove: gli altri file del pacchetto linguistico devono limitarsi a referenziarlo.
