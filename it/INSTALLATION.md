@@ -24,8 +24,8 @@ ChatGPT Project e Claude Project assumono ancora un flusso GitHub e sono disponi
 | Claude Code | `it/claude-code/CLAUDE.md` | `.claude/CLAUDE.md` | Copia il file creando `.claude/` se necessario. |
 | OpenAI Codex CLI | `it/codex/AGENTS.md` | `AGENTS.md` | Copia nella root del repository. |
 | GitHub Copilot | `it/copilot/copilot-instructions.md` | `.github/copilot-instructions.md` | Copia il file creando `.github/` se necessario. |
-| ChatGPT Project (solo backend GitHub) | `it/chatgpt/instruction.md` | `repodoc/project-instructions/chatgpt.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle istruzioni del Project. |
-| Claude Project (solo backend GitHub) | `it/claude/instruction.md` | `repodoc/project-instructions/claude.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle Project Instructions. |
+| ChatGPT Project (solo backend GitHub) | `it/chatgpt/instruction.md` | `repodoc/chatgpt-instruction.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle istruzioni del Project. |
+| Claude Project (solo backend GitHub) | `it/claude/instruction.md` | `repodoc/claude-chat-instruction.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle Project Instructions. |
 
 ## Struttura risultante
 
@@ -37,9 +37,8 @@ ChatGPT Project e Claude Project assumono ancora un flusso GitHub e sono disponi
 │   └── copilot-instructions.md
 ├── repodoc/
 │   ├── memory-protocol.md
-│   └── project-instructions/
-│       ├── chatgpt.md
-│       └── claude.md
+│   ├── chatgpt-instruction.md
+│   └── claude-chat-instruction.md
 └── AGENTS.md
 ```
 
@@ -50,7 +49,7 @@ Esegui dalla root di questa repository, sostituendo `<repository-target>` con il
 ```sh
 mkdir -p <repository-target>/.claude \
          <repository-target>/.github \
-         <repository-target>/repodoc/project-instructions
+         <repository-target>/repodoc
 
 cp it/claude-code/CLAUDE.md <repository-target>/.claude/CLAUDE.md
 cp it/codex/AGENTS.md <repository-target>/AGENTS.md
@@ -60,8 +59,8 @@ cat it/repodoc/memory-protocol-core.md it/repodoc/backends/<backend>.md > <repos
 # poi sostituisci a mano il placeholder del backend scelto nel file appena creato
 
 # solo se il backend è github:
-cp it/chatgpt/instruction.md <repository-target>/repodoc/project-instructions/chatgpt.md
-cp it/claude/instruction.md <repository-target>/repodoc/project-instructions/claude.md
+cp it/chatgpt/instruction.md <repository-target>/repodoc/chatgpt-instruction.md
+cp it/claude/instruction.md <repository-target>/repodoc/claude-chat-instruction.md
 ```
 
 ## Note
@@ -70,4 +69,4 @@ cp it/claude/instruction.md <repository-target>/repodoc/project-instructions/cla
 - Claude Code riconosce sia `CLAUDE.md` nella root sia `.claude/CLAUDE.md`; questa repository adotta `.claude/CLAUDE.md`. Poiché gli import `@path` sono relativi al file che li contiene, il wrapper usa `@../repodoc/memory-protocol.md`.
 - Codex carica `AGENTS.md` dalla root e può applicare file aggiuntivi nelle sottodirectory.
 - Copilot usa `.github/copilot-instructions.md` per le istruzioni valide in tutto il repository. Le regole mirate possono essere aggiunte in `.github/instructions/*.instructions.md`.
-- I file generati per ChatGPT Project e Claude Project sono copie pronte da incollare nelle rispettive interfacce; le applicazioni non li leggono direttamente dal repository.
+- I file generati per ChatGPT Project e Claude Project sono copie pronte da incollare nelle rispettive interfacce; le applicazioni non li leggono direttamente dal repository. Risiedono sotto `repodoc/` apposta, così Codex CLI, GitHub Copilot e Claude Code non rischiano di leggerli e interpretarli come istruzioni: questi strumenti leggono solo, rispettivamente, `AGENTS.md`, `.github/copilot-instructions.md` e `CLAUDE.md`/`.claude/CLAUDE.md`.

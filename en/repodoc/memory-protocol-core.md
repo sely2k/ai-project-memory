@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.1.0 -->
+<!-- repodoc:version 1.3.0 -->
 
 # Persistent memory protocol
 
@@ -58,7 +58,7 @@ Adapt document types to what already exists. Do not create unnecessary documents
 * `REQ-xxx-<title>`: requirements;
 * `OPEN-xxx-<title>`: open questions;
 * `ADR-xxx-<title>`: decisions;
-* `specs`: specifications;
+* `SPEC-xxx-<title>`: specifications (one YAML file per spec, see [Specifications](#specifications));
 * `research`: research;
 * `knowledge`: stable knowledge.
 
@@ -70,14 +70,14 @@ Create focused, indexed documents connected to one another. Avoid oversized cont
 
 ## Metadata
 
-When useful, `knowledge`, `decision`, `research`, and `specs` documents may carry metadata with:
+When useful, `knowledge`, `decision`, and `research` documents may carry metadata with:
 - `title`
 - `updated`
 - `related`
 - `status` (`draft`, `active`, `deprecated`, or `superseded`).
 - `tag`
 
-`openpoint` documents use the same metadata, but with `status` (`open` or `resolved`).
+`openpoint` documents use the same metadata, but with `status` (`open` or `resolved`). `SPEC-xxx-<title>` documents do not use this generic metadata: they follow the dedicated schema in [Specifications](#specifications).
 
 Do not add unnecessary metadata. The concrete metadata syntax depends on the configured backend.
 
@@ -125,6 +125,47 @@ Minimum sections:
 
 When a question is resolved, update `Status` to `resolved`. If the resolution is a significant decision, create or update the corresponding ADR instead of leaving the knowledge only in the OPEN.
 
+## Specifications
+
+Create a `SPEC-xxx-<title>` YAML file for every specification meant to eventually become a GitHub issue. Unlike other document types, a spec is plain YAML, not Markdown with front matter. Minimum fields:
+
+```yaml
+id: SPEC-014
+title: Support multi-backend export
+status: draft           # draft | ready | submitted | closed
+type: feature            # feature | bug | task | chore
+labels: [backend, export]
+assignees: []
+milestone: null
+body: |
+  ## Problem
+  ...
+  ## Proposal
+  ...
+  ## Acceptance criteria
+  - [ ] ...
+relations:
+  parent: null            # SPEC-xxx, maps to a GitHub sub-issue parent
+  children: []             # SPEC-xxx list, maps to GitHub sub-issues
+  related: []               # SPEC-xxx or #issue, non-hierarchical cross-reference
+github:
+  issue: null              # owner/repo#123, set once the issue exists
+  synced_at: null
+updated: ...
+```
+
+Reference other specs in `relations` by their `id`, so links stay valid before any issue exists. Resolve them to real issue numbers only when publishing, by looking up each referenced spec's `github.issue`.
+
+Publishing a spec as a GitHub issue (or updating one already published) is **never automatic**: do it only on explicit request, and only for specs with `status: ready`. When publishing:
+
+1. resolve `relations.parent`, `relations.children`, and `relations.related` against the `github.issue` of the referenced specs; flag any still unresolved instead of guessing;
+2. create or update the issue with `title`, `body`, `labels`, `assignees`, `milestone`;
+3. set the parent/children relationship through GitHub's native sub-issues feature; render `related` as a cross-reference list inside the issue body, since GitHub has no native non-hierarchical link type;
+4. write the resulting `github.issue` and `github.synced_at` back into the YAML file, and move `status` to `submitted`;
+5. verify the real outcome by rereading the issue through the connector or API, and report which issues were created or updated, with links.
+
+This publishing step is a real, externally visible action — it is not covered by the automatic documentation updates in [Limits](#limits); treat it like any other action visible to others.
+
 ## Consultation order
 
 For questions about project state, consult the configured memory backend first. Reliability order:
@@ -150,8 +191,9 @@ When clearly established and relevant knowledge emerges:
 3. prefer updating an existing document;
 4. create a new document only when necessary;
 5. update relevant indexes and links;
-6. save the update following the configured backend's rules;
-7. briefly report what was recorded.
+6. check that the content you are about to write is consistent with the existing documentation; if you find an inconsistency (conflicting data, contradictory decisions, different terminology), flag it explicitly and ask how to resolve it before saving;
+7. save the update following the configured backend's rules;
+8. briefly report what was recorded.
 
 Do not repeatedly interrupt the conversation to ask whether each item should be saved. Distinguish temporary brainstorming from established knowledge autonomously.
 

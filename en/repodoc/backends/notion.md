@@ -23,3 +23,5 @@ Use the page's properties (or a Notion database, if any) for `title`, `updated`,
 If the active Notion connector cannot create or modify pages, do not pretend to write: state precisely which permission is missing and ask for it to be enabled.
 
 The review flow (GitHub's persistent-PR equivalent) is not yet defined for this backend.
+
+`SPEC-xxx-<title>` specifications can be authored here like any other document, but publishing them as GitHub issues (see the GitHub backend) is not available.

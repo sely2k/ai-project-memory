@@ -1,5 +1,5 @@
 <!-- repodoc:start -->
-<!-- repodoc:version 1.1.0 -->
+<!-- repodoc:version 1.2.0 -->
 # Memoria persistente — Codex
 
 Prima di iniziare qualsiasi lavoro su questo repository, leggi `repodoc/memory-protocol.md` e segui il protocollo di memoria persistente che descrive per l'intera sessione.

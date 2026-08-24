@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.1.0 -->
+<!-- repodoc:version 1.3.0 -->
 
 # Protocollo di memoria persistente
 
@@ -59,7 +59,7 @@ Adatta i tipi di documento a quelli già esistenti. Non creare documenti o tipi 
 * `REQ-xxx-<title>`: requisiti;
 * `OPEN-xxx-<title>`: questioni aperte;
 * `ADR-xxx-<title>`: decisioni;
-* `specs`: specifiche;
+* `SPEC-xxx-<title>`: specifiche (uno YAML per specifica, vedi [Specifiche](#specifiche));
 * `research`: ricerche;
 * `knowledge`: conoscenza stabile.
 
@@ -71,14 +71,14 @@ Crea documenti focalizzati e indicizzati, collegati tra loro. Evita contenuti en
 
 ## Metadati
 
-Quando utile, i documenti `knowledge`, `decision`, `research` e `specs` possono avere metadati con:
+Quando utile, i documenti `knowledge`, `decision` e `research` possono avere metadati con:
 - `title`
 - `updated`
 - `related`
 - `status` (`draft`, `active`, `deprecated` o `superseded`).
 - `tag`
 
-I documenti `openpoint` usano gli stessi metadati, ma con `status` (`open` o `resolved`).
+I documenti `openpoint` usano gli stessi metadati, ma con `status` (`open` o `resolved`). I documenti `SPEC-xxx-<title>` non usano questi metadati generici: seguono lo schema dedicato in [Specifiche](#specifiche).
 
 Non aggiungere metadati inutili. La sintassi concreta dei metadati dipende dal backend configurato.
 
@@ -134,6 +134,47 @@ Sezioni minime:
 
 Quando una questione si risolve, aggiorna lo `Status` a `resolved`. Se la risoluzione è una decisione significativa, crea o aggiorna l'ADR corrispondente invece di lasciare la conoscenza solo nell'OPEN.
 
+## Specifiche
+
+Crea un file YAML `SPEC-xxx-<title>` per ogni specifica destinata a diventare, prima o poi, una issue GitHub. A differenza degli altri tipi di documento, una specifica è YAML puro, non Markdown con front matter. Campi minimi:
+
+```yaml
+id: SPEC-014
+title: Support multi-backend export
+status: draft           # draft | ready | submitted | closed
+type: feature            # feature | bug | task | chore
+labels: [backend, export]
+assignees: []
+milestone: null
+body: |
+  ## Problem
+  ...
+  ## Proposal
+  ...
+  ## Acceptance criteria
+  - [ ] ...
+relations:
+  parent: null            # SPEC-xxx, corrisponde al parent sub-issue di GitHub
+  children: []             # elenco di SPEC-xxx, corrisponde ai sub-issue di GitHub
+  related: []               # SPEC-xxx o #issue, collegamento non gerarchico
+github:
+  issue: null              # owner/repo#123, valorizzato quando la issue esiste
+  synced_at: null
+updated: ...
+```
+
+Fai riferimento alle altre specifiche in `relations` tramite il loro `id`, così i collegamenti restano validi prima che esista una issue. Risolvili in numeri di issue reali solo al momento della pubblicazione, leggendo il `github.issue` di ciascuna specifica referenziata.
+
+Pubblicare una specifica come issue GitHub (o aggiornarne una già pubblicata) **non è mai automatico**: fallo solo su richiesta esplicita, e solo per specifiche con `status: ready`. Quando pubblichi:
+
+1. risolvi `relations.parent`, `relations.children` e `relations.related` rispetto al `github.issue` delle specifiche referenziate; segnala quelli ancora irrisolti invece di indovinare;
+2. crea o aggiorna la issue con `title`, `body`, `labels`, `assignees`, `milestone`;
+3. imposta la relazione parent/children tramite la funzionalità nativa dei sub-issue di GitHub; rendi `related` come elenco di riferimenti incrociati nel corpo della issue, dato che GitHub non ha un tipo di collegamento non gerarchico nativo;
+4. scrivi `github.issue` e `github.synced_at` nel file YAML, e porta `status` a `submitted`;
+5. verifica l'esito reale rileggendo la issue tramite il connector o l'API, e riporta quali issue sono state create o aggiornate, con i relativi link.
+
+Questo passo di pubblicazione è un'azione reale e visibile ad altri: non rientra negli aggiornamenti automatici della documentazione descritti in [Limiti](#limiti); trattalo come qualsiasi altra azione visibile ad altri.
+
 ## Consultazione
 
 Per domande sullo stato del progetto, consulta prima il backend di memoria configurato. Ordine di affidabilità:
@@ -159,8 +200,9 @@ Quando emerge chiaramente conoscenza consolidata e rilevante:
 3. aggiorna preferibilmente un documento esistente;
 4. crea un nuovo documento solo quando necessario;
 5. aggiorna eventuali indici e collegamenti;
-6. salva l'aggiornamento seguendo le regole del backend configurato;
-7. comunica sinteticamente cosa hai registrato.
+6. verifica che il contenuto che stai per scrivere sia coerente con la documentazione esistente; se rilevi un'incoerenza (dati contrastanti, decisioni contraddittorie, terminologia diversa), segnalala esplicitamente e chiedi come risolverla prima di salvare;
+7. salva l'aggiornamento seguendo le regole del backend configurato;
+8. comunica sinteticamente cosa hai registrato.
 
 Non interrompere continuamente la conversazione per chiedere se ogni informazione debba essere salvata. Distingui autonomamente brainstorming e conoscenza consolidata.
 

@@ -6,7 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
-REPODOC_VERSION = "1.1.0"
+REPODOC_VERSION = "1.3.0"
 
 from pathlib import Path
 import re
@@ -21,8 +21,8 @@ from questionary import Choice
 
 
 TOOL_FILES = {
-    "chatgpt-project": ("chatgpt/instruction.md", "repodoc/project-instructions/chatgpt.md"),
-    "claude-project": ("claude/instruction.md", "repodoc/project-instructions/claude.md"),
+    "chatgpt-project": ("chatgpt/instruction.md", "repodoc/chatgpt-instruction.md"),
+    "claude-project": ("claude/instruction.md", "repodoc/claude-chat-instruction.md"),
     "claude-code": ("claude-code/CLAUDE.md", ".claude/CLAUDE.md"),
     "codex": ("codex/AGENTS.md", "AGENTS.md"),
     "copilot": ("copilot/copilot-instructions.md", ".github/copilot-instructions.md"),

@@ -19,7 +19,7 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `REQ-xxx-<title>` | `repodoc/requirement/REQ-xxx-<title>.md` |
 | `OPEN-xxx-<title>` | `repodoc/openpoint/OPEN-xxx-<title>.md` |
 | `ADR-xxx-<title>` | `repodoc/decisions/ADR-xxx-<title>.md` |
-| `specs` | `repodoc/specs/` |
+| `SPEC-xxx-<title>` | `repodoc/specs/SPEC-xxx-<title>.yaml` |
 | `research` | `repodoc/research/` |
 | `knowledge` | `repodoc/knowledge/` |
 
@@ -40,6 +40,8 @@ status: ...
 tag: [...]
 ---
 ```
+
+`SPEC-xxx-<title>` files are plain YAML, not Markdown with front matter: see [Specifications](../memory-protocol-core.md#specifications) in the core protocol for their schema.
 
 ### Persistent pull request
 
@@ -78,3 +80,14 @@ Create small, coherent commits grouped by concept, for example:
 ```text
 docs: record authentication decision
 ```
+
+### Publishing specs as issues
+
+Only when explicitly requested, for a `SPEC-xxx-<title>` file with `status: ready`:
+
+1. Check the write access of the active GitHub connector for issues (not just files/commits). If it cannot write, do not fake the publish: state precisely which permission is missing and ask for it to be enabled.
+2. Resolve `relations.parent`, `relations.children`, and `relations.related` by looking up the `github.issue` of each referenced spec.
+3. Create the issue (`gh issue create --title ... --body-file ... --label ... --assignee ... --milestone ...`), or update it with `gh issue edit` if `github.issue` is already set.
+4. Set the parent/children relationship through GitHub's native sub-issues feature; render `relations.related` as a `Related: #...` list inside the issue body, since GitHub has no native non-hierarchical link type.
+5. Write `github.issue` and `github.synced_at` back into the YAML file and set `status: submitted`.
+6. Verify the real outcome by rereading the issue through the connector or API, and report the created/updated issue links.

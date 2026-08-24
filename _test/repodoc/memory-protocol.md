@@ -1,3 +1,5 @@
+<!-- repodoc:version 1.2.0 -->
+
 # Protocollo di memoria persistente
 
 Fonte unica di verità del protocollo. Non duplicare questo contenuto altrove: gli altri file del pacchetto linguistico devono limitarsi a referenziarlo.
@@ -157,8 +159,9 @@ Quando emerge chiaramente conoscenza consolidata e rilevante:
 3. aggiorna preferibilmente un documento esistente;
 4. crea un nuovo documento solo quando necessario;
 5. aggiorna eventuali indici e collegamenti;
-6. salva l'aggiornamento seguendo le regole del backend configurato;
-7. comunica sinteticamente cosa hai registrato.
+6. verifica che il contenuto che stai per scrivere sia coerente con la documentazione esistente; se rilevi un'incoerenza (dati contrastanti, decisioni contraddittorie, terminologia diversa), segnalala esplicitamente e chiedi come risolverla prima di salvare;
+7. salva l'aggiornamento seguendo le regole del backend configurato;
+8. comunica sinteticamente cosa hai registrato.
 
 Non interrompere continuamente la conversazione per chiedere se ogni informazione debba essere salvata. Distingui autonomamente brainstorming e conoscenza consolidata.
 

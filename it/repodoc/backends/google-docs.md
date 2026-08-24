@@ -23,3 +23,5 @@ Non essendo disponibile un front matter nativo, riporta i metadati (`title`, `up
 Se il connector Google Drive/Docs in uso non può creare o modificare documenti, non simulare la scrittura: indica con precisione quale permesso manca e chiedi di abilitarlo.
 
 Il flusso di revisione (equivalente della PR persistente di GitHub) non è ancora definito per questo backend.
+
+Le specifiche `SPEC-xxx-<title>` possono essere scritte qui come qualsiasi altro documento, ma pubblicarle come issue GitHub (vedi il backend GitHub) non è disponibile.

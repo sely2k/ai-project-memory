@@ -1,5 +1,5 @@
 <!-- repodoc:start -->
-<!-- repodoc:version 1.1.0 -->
+<!-- repodoc:version 1.2.0 -->
 # Memoria persistente — Claude Code
 
 @../repodoc/memory-protocol.md

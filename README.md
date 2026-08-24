@@ -65,10 +65,9 @@ Selecting all tools produces:
 ├── .github/copilot-instructions.md
 ├── repodoc/
 │   ├── memory-protocol.md
-│   └── project-instructions/
-│       ├── chatgpt.md
-│       └── claude.md
+│   ├── chatgpt-instruction.md
+│   └── claude-chat-instruction.md
 └── AGENTS.md
 ```
 
-Paste `repodoc/project-instructions/chatgpt.md` and `repodoc/project-instructions/claude.md` into the corresponding project settings. These files are installation artifacts for manual use; the applications do not read them directly from the repository.
+Paste `repodoc/chatgpt-instruction.md` and `repodoc/claude-chat-instruction.md` into the corresponding project settings. These files are installation artifacts for manual use; the applications do not read them directly from the repository. They live under `repodoc/` specifically so Codex CLI, GitHub Copilot, and Claude Code never pick them up as instructions: those tools only read `AGENTS.md`, `.github/copilot-instructions.md`, and `CLAUDE.md`/`.claude/CLAUDE.md` respectively.

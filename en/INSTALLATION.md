@@ -22,8 +22,8 @@ ChatGPT Project and Claude Project still assume a GitHub flow and are only offer
 | Claude Code | `en/claude-code/CLAUDE.md` | `.claude/CLAUDE.md` | Create `.claude/` if needed. |
 | OpenAI Codex CLI | `en/codex/AGENTS.md` | `AGENTS.md` | Copy to the repository root. |
 | GitHub Copilot | `en/copilot/copilot-instructions.md` | `.github/copilot-instructions.md` | Create `.github/` if needed. |
-| ChatGPT Project (GitHub backend only) | `en/chatgpt/instruction.md` | `repodoc/project-instructions/chatgpt.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project instructions. |
-| Claude Project (GitHub backend only) | `en/claude/instruction.md` | `repodoc/project-instructions/claude.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project Instructions. |
+| ChatGPT Project (GitHub backend only) | `en/chatgpt/instruction.md` | `repodoc/chatgpt-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project instructions. |
+| Claude Project (GitHub backend only) | `en/claude/instruction.md` | `repodoc/claude-chat-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project Instructions. |
 
 ## Resulting repository layout
 
@@ -35,9 +35,8 @@ ChatGPT Project and Claude Project still assume a GitHub flow and are only offer
 │   └── copilot-instructions.md
 ├── repodoc/
 │   ├── memory-protocol.md
-│   └── project-instructions/
-│       ├── chatgpt.md
-│       └── claude.md
+│   ├── chatgpt-instruction.md
+│   └── claude-chat-instruction.md
 └── AGENTS.md
 ```
 
@@ -47,4 +46,4 @@ ChatGPT Project and Claude Project still assume a GitHub flow and are only offer
 - Claude Code supports both root `CLAUDE.md` and `.claude/CLAUDE.md`; this project uses `.claude/CLAUDE.md`. Its import is therefore `@../repodoc/memory-protocol.md`.
 - Codex reads root `AGENTS.md` and may layer additional files from nested directories.
 - Copilot uses `.github/copilot-instructions.md` for repository-wide guidance. Path-specific rules can live under `.github/instructions/*.instructions.md`.
-- The generated ChatGPT and Claude Project files are ready-to-paste copies for their respective interfaces; the applications do not read them directly from the repository.
+- The generated ChatGPT and Claude Project files are ready-to-paste copies for their respective interfaces; the applications do not read them directly from the repository. They live under `repodoc/` on purpose, so Codex CLI, GitHub Copilot, and Claude Code never risk reading and interpreting them as instructions: those tools only read `AGENTS.md`, `.github/copilot-instructions.md`, and `CLAUDE.md`/`.claude/CLAUDE.md` respectively.

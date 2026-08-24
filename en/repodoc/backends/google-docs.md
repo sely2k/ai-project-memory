@@ -23,3 +23,5 @@ Since there is no native front matter, record metadata (`title`, `updated`, `rel
 If the active Google Drive/Docs connector cannot create or modify documents, do not pretend to write: state precisely which permission is missing and ask for it to be enabled.
 
 The review flow (GitHub's persistent-PR equivalent) is not yet defined for this backend.
+
+`SPEC-xxx-<title>` specifications can be authored here like any other document, but publishing them as GitHub issues (see the GitHub backend) is not available.

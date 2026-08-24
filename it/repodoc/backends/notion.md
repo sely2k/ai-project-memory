@@ -23,3 +23,5 @@ Usa le proprietà della pagina (o di un eventuale database Notion) per `title`, 
 Se il connector Notion in uso non può creare o modificare pagine, non simulare la scrittura: indica con precisione quale permesso manca e chiedi di abilitarlo.
 
 Il flusso di revisione (equivalente della PR persistente di GitHub) non è ancora definito per questo backend.
+
+Le specifiche `SPEC-xxx-<title>` possono essere scritte qui come qualsiasi altro documento, ma pubblicarle come issue GitHub (vedi il backend GitHub) non è disponibile.
