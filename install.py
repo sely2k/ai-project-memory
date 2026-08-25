@@ -6,7 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
-REPODOC_VERSION = "1.3.0"
+REPODOC_VERSION = "1.5.0"
 
 from pathlib import Path
 import re
@@ -32,6 +32,41 @@ TOOL_FILES = {
 GITHUB_ONLY_TOOLS = {"chatgpt-project", "claude-project"}
 PROTOCOL_CORE = "repodoc/memory-protocol-core.md"
 PROTOCOL_DESTINATION = "repodoc/memory-protocol.md"
+
+# RepoDoc agents: standalone, dedicated files (not managed-block merges) that
+# operate the persistent GitHub PR flow, so they are only installed for the
+# 'github' backend, like GITHUB_ONLY_TOOLS above (but in the opposite sense).
+AGENT_FILES = {
+    "claude-code": [
+        ("claude-code/agents/consistency-check.md", ".claude/agents/repodoc-consistency-check.md"),
+        ("claude-code/agents/close-openpoint.md", ".claude/agents/repodoc-close-openpoint.md"),
+        ("claude-code/agents/synthesize-specs.md", ".claude/agents/repodoc-synthesize-specs.md"),
+        ("claude-code/agents/expand-specs.md", ".claude/agents/repodoc-expand-specs.md"),
+        ("claude-code/agents/expand-spec-worker.md", ".claude/agents/repodoc-expand-spec-worker.md"),
+    ],
+    "codex": [
+        ("codex/agents/consistency-check.toml", ".codex/agents/repodoc-consistency-check.toml"),
+        ("codex/agents/close-openpoint.toml", ".codex/agents/repodoc-close-openpoint.toml"),
+        ("codex/agents/synthesize-specs.toml", ".codex/agents/repodoc-synthesize-specs.toml"),
+        ("codex/agents/expand-specs.toml", ".codex/agents/repodoc-expand-specs.toml"),
+    ],
+    "copilot": [
+        ("copilot/agents/consistency-check.agent.md", ".github/agents/repodoc-consistency-check.agent.md"),
+        ("copilot/agents/close-openpoint.agent.md", ".github/agents/repodoc-close-openpoint.agent.md"),
+        ("copilot/agents/synthesize-specs.agent.md", ".github/agents/repodoc-synthesize-specs.agent.md"),
+        ("copilot/agents/expand-specs.agent.md", ".github/agents/repodoc-expand-specs.agent.md"),
+    ],
+}
+# The spec-expansion skill is authored once and dropped at whichever
+# tool-specific discovery path applies: Claude Code only reads
+# .claude/skills/; Codex and Copilot CLI both discover .agents/skills/.
+SKILL_FILE = "skills/spec-expand/SKILL.md"
+SKILL_DESTINATIONS = {
+    "claude-code": ".claude/skills/repodoc-spec-expand/SKILL.md",
+    "codex": ".agents/skills/repodoc-spec-expand/SKILL.md",
+    "copilot": ".agents/skills/repodoc-spec-expand/SKILL.md",
+}
+AGENT_BACKENDS = {"github"}
 BACKENDS = {
     "github": "repodoc/backends/github.md",
     "google-docs": "repodoc/backends/google-docs.md",
@@ -349,9 +384,29 @@ def write_installed_file(destination: str, content: str, language: str, target: 
     return True, overwrite_all
 
 
+def inject_version(content: str, destination: str) -> str:
+    """Stamp the installed REPODOC_VERSION without corrupting YAML front matter or TOML.
+
+    Front-matter parsers (Claude Code agents/skills, Copilot .agent.md) require the
+    opening '---' to be the very first bytes of the file, so the marker is inserted
+    right after the closing '---' instead of prepended. TOML files get a '#' comment;
+    everything else keeps the original HTML-comment prefix.
+    """
+    version_comment = f"repodoc:version {REPODOC_VERSION}"
+    if content.startswith("---\n"):
+        close = content.find("\n---", 4)
+        if close != -1:
+            line_end = content.find("\n", close + 1)
+            insert_at = line_end + 1 if line_end != -1 else len(content)
+            return f"{content[:insert_at]}\n<!-- {version_comment} -->\n{content[insert_at:]}"
+    if destination.endswith(".toml"):
+        return f"# {version_comment}\n\n{content}"
+    return f"<!-- {version_comment} -->\n\n{content}"
+
+
 def install_file(source: str, destination: str, language: str, replacements: dict[str, str], target: Path, overwrite_all: bool) -> tuple[bool, bool]:
     content = render_template(read_template(language, source), replacements, language)
-    content = f"<!-- repodoc:version {REPODOC_VERSION} -->\n\n{content}"
+    content = inject_version(content, destination)
     return write_installed_file(destination, content, language, target, overwrite_all)
 
 
@@ -441,6 +496,26 @@ def main() -> int:
         else:
             was_installed, overwrite_all = install_file(source, destination, language, replacements, target, overwrite_all)
         installed += was_installed
+
+    agent_capable_tools = [tool for tool in tools if tool in AGENT_FILES]
+    if agent_capable_tools and backend not in AGENT_BACKENDS:
+        message = (
+            f"RepoDoc agents (consistency check, close open point, synthesize specs) still assume the GitHub persistent-PR flow and are skipped for '{backend}'."
+            if language == "en"
+            else f"Gli agenti RepoDoc (verifica coerenza, chiusura open point, sintesi specifiche) assumono ancora il flusso PR di GitHub e non sono installati per il backend '{backend}'."
+        )
+        print(message)
+    elif backend in AGENT_BACKENDS:
+        installed_skill_destinations: set[str] = set()
+        for tool in agent_capable_tools:
+            for source, destination in AGENT_FILES[tool]:
+                was_installed, overwrite_all = install_file(source, destination, language, replacements, target, overwrite_all)
+                installed += was_installed
+            skill_destination = SKILL_DESTINATIONS.get(tool)
+            if skill_destination and skill_destination not in installed_skill_destinations:
+                was_installed, overwrite_all = install_file(SKILL_FILE, skill_destination, language, replacements, target, overwrite_all)
+                installed += was_installed
+                installed_skill_destinations.add(skill_destination)
 
     print(f"\nDone. {installed} file(s) installed.")
     return 0

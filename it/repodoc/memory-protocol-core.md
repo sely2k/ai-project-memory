@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.3.0 -->
+<!-- repodoc:version 1.5.0 -->
 
 # Protocollo di memoria persistente
 
@@ -60,6 +60,7 @@ Adatta i tipi di documento a quelli già esistenti. Non creare documenti o tipi 
 * `OPEN-xxx-<title>`: questioni aperte;
 * `ADR-xxx-<title>`: decisioni;
 * `SPEC-xxx-<title>`: specifiche (uno YAML per specifica, vedi [Specifiche](#specifiche));
+* `specs-catalog`: catalogo sintetico di specifiche di alto livello non ancora formalizzate come `SPEC-xxx-<title>` (vedi [Specifiche](#specifiche));
 * `research`: ricerche;
 * `knowledge`: conoscenza stabile.
 
@@ -135,6 +136,8 @@ Sezioni minime:
 Quando una questione si risolve, aggiorna lo `Status` a `resolved`. Se la risoluzione è una decisione significativa, crea o aggiorna l'ADR corrispondente invece di lasciare la conoscenza solo nell'OPEN.
 
 ## Specifiche
+
+Le specifiche nascono spesso come voci sintetiche nel catalogo `specs-catalog`: un elenco puntato di proposte di alto livello non ancora formalizzate, tipicamente prodotto quando una situazione (open point, decisione, requisito) si chiude ed emerge lavoro futuro degno di essere tracciato. Ogni voce riporta un identificativo provvisorio `SPEC-xxx`, un titolo breve, una sintesi in una riga e un collegamento ai documenti di origine. Quando una voce del catalogo è pronta per essere dettagliata, trasformala nel file YAML `SPEC-xxx-<title>` descritto sotto e sostituisci la voce del catalogo con un collegamento al file canonico, così da non mantenere la stessa conoscenza duplicata in due punti.
 
 Crea un file YAML `SPEC-xxx-<title>` per ogni specifica destinata a diventare, prima o poi, una issue GitHub. A differenza degli altri tipi di documento, una specifica è YAML puro, non Markdown con front matter. Campi minimi:
 

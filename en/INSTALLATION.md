@@ -25,20 +25,69 @@ ChatGPT Project and Claude Project still assume a GitHub flow and are only offer
 | ChatGPT Project (GitHub backend only) | `en/chatgpt/instruction.md` | `repodoc/chatgpt-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project instructions. |
 | Claude Project (GitHub backend only) | `en/claude/instruction.md` | `repodoc/claude-chat-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project Instructions. |
 
+### RepoDoc agents (GitHub backend only)
+
+Besides the base instructions file, for each selected tool the installer also copies the dedicated agents defined in `install.py` (`AGENT_FILES`) and the spec-expansion skill (`SKILL_FILE`/`SKILL_DESTINATIONS`). They are installed **only when the chosen backend is GitHub**, because they operate the persistent PR flow described in `en/repodoc/backends/github.md`.
+
+| Tool | Source file | Target path in the target repository |
+|---|---|---|
+| Claude Code | `en/claude-code/agents/consistency-check.md` | `.claude/agents/repodoc-consistency-check.md` |
+| Claude Code | `en/claude-code/agents/close-openpoint.md` | `.claude/agents/repodoc-close-openpoint.md` |
+| Claude Code | `en/claude-code/agents/synthesize-specs.md` | `.claude/agents/repodoc-synthesize-specs.md` |
+| Claude Code | `en/claude-code/agents/expand-specs.md` | `.claude/agents/repodoc-expand-specs.md` |
+| Claude Code | `en/claude-code/agents/expand-spec-worker.md` | `.claude/agents/repodoc-expand-spec-worker.md` |
+| Claude Code | `en/skills/spec-expand/SKILL.md` | `.claude/skills/repodoc-spec-expand/SKILL.md` |
+| OpenAI Codex CLI | `en/codex/agents/consistency-check.toml` | `.codex/agents/repodoc-consistency-check.toml` |
+| OpenAI Codex CLI | `en/codex/agents/close-openpoint.toml` | `.codex/agents/repodoc-close-openpoint.toml` |
+| OpenAI Codex CLI | `en/codex/agents/synthesize-specs.toml` | `.codex/agents/repodoc-synthesize-specs.toml` |
+| OpenAI Codex CLI | `en/codex/agents/expand-specs.toml` | `.codex/agents/repodoc-expand-specs.toml` |
+| OpenAI Codex CLI | `en/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` |
+| GitHub Copilot | `en/copilot/agents/consistency-check.agent.md` | `.github/agents/repodoc-consistency-check.agent.md` |
+| GitHub Copilot | `en/copilot/agents/close-openpoint.agent.md` | `.github/agents/repodoc-close-openpoint.agent.md` |
+| GitHub Copilot | `en/copilot/agents/synthesize-specs.agent.md` | `.github/agents/repodoc-synthesize-specs.agent.md` |
+| GitHub Copilot | `en/copilot/agents/expand-specs.agent.md` | `.github/agents/repodoc-expand-specs.agent.md` |
+| GitHub Copilot | `en/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` (skipped if Codex already wrote it) |
+
+The `repodoc-spec-expand` skill is authored once and copied to whichever native discovery path each selected tool uses: `.claude/skills/` for Claude Code, `.agents/skills/` for Codex and Copilot CLI (which share it). If both Codex and Copilot are selected, the file is written only once.
+
 ## Resulting repository layout
 
 ```text
 <target-repository>/
 ├── .claude/
-│   └── CLAUDE.md
+│   ├── CLAUDE.md
+│   ├── agents/
+│   │   ├── repodoc-consistency-check.md
+│   │   ├── repodoc-close-openpoint.md
+│   │   ├── repodoc-synthesize-specs.md
+│   │   ├── repodoc-expand-specs.md
+│   │   └── repodoc-expand-spec-worker.md
+│   └── skills/
+│       └── repodoc-spec-expand/SKILL.md
+├── .codex/
+│   └── agents/
+│       ├── repodoc-consistency-check.toml
+│       ├── repodoc-close-openpoint.toml
+│       ├── repodoc-synthesize-specs.toml
+│       └── repodoc-expand-specs.toml
 ├── .github/
-│   └── copilot-instructions.md
+│   ├── copilot-instructions.md
+│   └── agents/
+│       ├── repodoc-consistency-check.agent.md
+│       ├── repodoc-close-openpoint.agent.md
+│       ├── repodoc-synthesize-specs.agent.md
+│       └── repodoc-expand-specs.agent.md
+├── .agents/
+│   └── skills/
+│       └── repodoc-spec-expand/SKILL.md
 ├── repodoc/
 │   ├── memory-protocol.md
 │   ├── chatgpt-instruction.md
 │   └── claude-chat-instruction.md
 └── AGENTS.md
 ```
+
+(the agent files, `.codex/agents/`, `.github/agents/`, and `.agents/skills/` are only present when the backend is GitHub.)
 
 ## Notes
 

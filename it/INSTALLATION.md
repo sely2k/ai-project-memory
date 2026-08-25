@@ -27,20 +27,69 @@ ChatGPT Project e Claude Project assumono ancora un flusso GitHub e sono disponi
 | ChatGPT Project (solo backend GitHub) | `it/chatgpt/instruction.md` | `repodoc/chatgpt-instruction.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle istruzioni del Project. |
 | Claude Project (solo backend GitHub) | `it/claude/instruction.md` | `repodoc/claude-chat-instruction.md` | L'installer sostituisce `<owner>/<repo>`; incolla poi il contenuto nelle Project Instructions. |
 
+### Agenti RepoDoc (solo backend GitHub)
+
+Oltre al file di istruzioni base, per ciascuno strumento selezionato l'installer copia anche gli agenti dedicati definiti in `install.py` (`AGENT_FILES`) e la skill di espansione specifiche (`SKILL_FILE`/`SKILL_DESTINATIONS`). Sono installati **solo quando il backend scelto è GitHub**, perché operano il flusso di PR persistente descritto in `it/repodoc/backends/github.md`.
+
+| Strumento | File sorgente | Destinazione nel repository target |
+|---|---|---|
+| Claude Code | `it/claude-code/agents/consistency-check.md` | `.claude/agents/repodoc-consistency-check.md` |
+| Claude Code | `it/claude-code/agents/close-openpoint.md` | `.claude/agents/repodoc-close-openpoint.md` |
+| Claude Code | `it/claude-code/agents/synthesize-specs.md` | `.claude/agents/repodoc-synthesize-specs.md` |
+| Claude Code | `it/claude-code/agents/expand-specs.md` | `.claude/agents/repodoc-expand-specs.md` |
+| Claude Code | `it/claude-code/agents/expand-spec-worker.md` | `.claude/agents/repodoc-expand-spec-worker.md` |
+| Claude Code | `it/skills/spec-expand/SKILL.md` | `.claude/skills/repodoc-spec-expand/SKILL.md` |
+| OpenAI Codex CLI | `it/codex/agents/consistency-check.toml` | `.codex/agents/repodoc-consistency-check.toml` |
+| OpenAI Codex CLI | `it/codex/agents/close-openpoint.toml` | `.codex/agents/repodoc-close-openpoint.toml` |
+| OpenAI Codex CLI | `it/codex/agents/synthesize-specs.toml` | `.codex/agents/repodoc-synthesize-specs.toml` |
+| OpenAI Codex CLI | `it/codex/agents/expand-specs.toml` | `.codex/agents/repodoc-expand-specs.toml` |
+| OpenAI Codex CLI | `it/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` |
+| GitHub Copilot | `it/copilot/agents/consistency-check.agent.md` | `.github/agents/repodoc-consistency-check.agent.md` |
+| GitHub Copilot | `it/copilot/agents/close-openpoint.agent.md` | `.github/agents/repodoc-close-openpoint.agent.md` |
+| GitHub Copilot | `it/copilot/agents/synthesize-specs.agent.md` | `.github/agents/repodoc-synthesize-specs.agent.md` |
+| GitHub Copilot | `it/copilot/agents/expand-specs.agent.md` | `.github/agents/repodoc-expand-specs.agent.md` |
+| GitHub Copilot | `it/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` (se non già scritto da Codex) |
+
+La skill `repodoc-spec-expand` è un unico contenuto sorgente, copiato nel percorso di scoperta nativo di ciascuno strumento selezionato: `.claude/skills/` per Claude Code, `.agents/skills/` per Codex e Copilot CLI (che lo condividono). Se sia Codex sia Copilot sono selezionati, il file viene scritto una sola volta.
+
 ## Struttura risultante
 
 ```text
 <repository-target>/
 ├── .claude/
-│   └── CLAUDE.md
+│   ├── CLAUDE.md
+│   ├── agents/
+│   │   ├── repodoc-consistency-check.md
+│   │   ├── repodoc-close-openpoint.md
+│   │   ├── repodoc-synthesize-specs.md
+│   │   ├── repodoc-expand-specs.md
+│   │   └── repodoc-expand-spec-worker.md
+│   └── skills/
+│       └── repodoc-spec-expand/SKILL.md
+├── .codex/
+│   └── agents/
+│       ├── repodoc-consistency-check.toml
+│       ├── repodoc-close-openpoint.toml
+│       ├── repodoc-synthesize-specs.toml
+│       └── repodoc-expand-specs.toml
 ├── .github/
-│   └── copilot-instructions.md
+│   ├── copilot-instructions.md
+│   └── agents/
+│       ├── repodoc-consistency-check.agent.md
+│       ├── repodoc-close-openpoint.agent.md
+│       ├── repodoc-synthesize-specs.agent.md
+│       └── repodoc-expand-specs.agent.md
+├── .agents/
+│   └── skills/
+│       └── repodoc-spec-expand/SKILL.md
 ├── repodoc/
 │   ├── memory-protocol.md
 │   ├── chatgpt-instruction.md
 │   └── claude-chat-instruction.md
 └── AGENTS.md
 ```
+
+(gli agenti, `.codex/agents/`, `.github/agents/` e `.agents/skills/` sono presenti solo quando il backend è GitHub.)
 
 ## Copia manuale
 

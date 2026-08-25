@@ -20,6 +20,7 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `OPEN-xxx-<title>` | `repodoc/openpoint/OPEN-xxx-<title>.md` |
 | `ADR-xxx-<title>` | `repodoc/decisions/ADR-xxx-<title>.md` |
 | `SPEC-xxx-<title>` | `repodoc/specs/SPEC-xxx-<title>.yaml` |
+| `specs-catalog` | `repodoc/specs/features.md` |
 | `research` | `repodoc/research/` |
 | `knowledge` | `repodoc/knowledge/` |
 
@@ -91,3 +92,15 @@ Solo su richiesta esplicita, per un file `SPEC-xxx-<title>` con `status: ready`:
 4. Imposta la relazione parent/children tramite la funzionalità nativa dei sub-issue di GitHub; rendi `relations.related` come elenco `Related: #...` nel corpo della issue, dato che GitHub non ha un tipo di collegamento non gerarchico nativo.
 5. Scrivi `github.issue` e `github.synced_at` nel file YAML e porta `status` a `submitted`.
 6. Verifica l'esito reale rileggendo la issue tramite il connector o l'API, e riporta i link delle issue create o aggiornate.
+
+### Agenti RepoDoc
+
+Per questo backend, l'installer può copiare agenti dedicati che eseguono parti di questo protocollo in autonomia, ciascuno nel formato nativo dello strumento selezionato (Claude Code, Codex, GitHub Copilot):
+
+- **Verifica coerenza** (`repodoc-consistency-check`): audita l'intero backend di memoria alla ricerca di contraddizioni, link rotti, duplicazioni e stati non aggiornati.
+- **Chiudi open point** (`repodoc-close-openpoint`): legge un `OPEN-xxx-<title>` e prova a risolverlo raccogliendo evidenze.
+- **Sintetizza specifiche** (`repodoc-synthesize-specs`): a situazione chiusa, registra lavoro futuro come voci di alto livello in `repodoc/specs/features.md`.
+- **Espandi specifica** (skill `repodoc-spec-expand`): trasforma una singola voce del catalogo in un file `SPEC-xxx-<title>.yaml` completo, su richiesta puntuale dell'utente.
+- **Espandi tutte le specifiche** (`repodoc-expand-specs`): scorre il catalogo `repodoc/specs/features.md` voce per voce e la formalizza in un file `SPEC-xxx-<title>.yaml` completo. Su Claude Code delega ogni singola espansione al sotto-agente `repodoc-expand-spec-worker` (invocato tramite lo strumento Task, mai in parallelo, sullo stesso branch della PR persistente); su Codex e Copilot, che non offrono un meccanismo per invocare sotto-agenti isolati, applica la stessa procedura in linea, una voce alla volta.
+
+Tutti seguono il flusso di "Pull Request persistente" descritto sopra e per questo sono installati solo per il backend GitHub.

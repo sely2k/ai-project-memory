@@ -20,6 +20,7 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `OPEN-xxx-<title>` | `repodoc/openpoint/OPEN-xxx-<title>.md` |
 | `ADR-xxx-<title>` | `repodoc/decisions/ADR-xxx-<title>.md` |
 | `SPEC-xxx-<title>` | `repodoc/specs/SPEC-xxx-<title>.yaml` |
+| `specs-catalog` | `repodoc/specs/features.md` |
 | `research` | `repodoc/research/` |
 | `knowledge` | `repodoc/knowledge/` |
 
@@ -91,3 +92,15 @@ Only when explicitly requested, for a `SPEC-xxx-<title>` file with `status: read
 4. Set the parent/children relationship through GitHub's native sub-issues feature; render `relations.related` as a `Related: #...` list inside the issue body, since GitHub has no native non-hierarchical link type.
 5. Write `github.issue` and `github.synced_at` back into the YAML file and set `status: submitted`.
 6. Verify the real outcome by rereading the issue through the connector or API, and report the created/updated issue links.
+
+### RepoDoc agents
+
+For this backend, the installer can copy dedicated agents that run parts of this protocol autonomously, each in the native format of the selected tool (Claude Code, Codex, GitHub Copilot):
+
+- **Consistency check** (`repodoc-consistency-check`): audits the entire memory backend for contradictions, broken links, duplication, and stale status fields.
+- **Close open point** (`repodoc-close-openpoint`): reads an `OPEN-xxx-<title>` and tries to resolve it by gathering evidence.
+- **Synthesize specs** (`repodoc-synthesize-specs`): once a situation closes, records future work as high-level entries in `repodoc/specs/features.md`.
+- **Expand spec** (`repodoc-spec-expand` skill): turns a single catalog entry into a complete `SPEC-xxx-<title>.yaml` file, on the user's specific request.
+- **Expand all specs** (`repodoc-expand-specs`): walks the `repodoc/specs/features.md` catalog entry by entry and formalizes each into a complete `SPEC-xxx-<title>.yaml` file. On Claude Code it delegates each single expansion to the `repodoc-expand-spec-worker` sub-agent (invoked via the Task tool, never in parallel, on the same persistent-PR branch); on Codex and Copilot, which offer no mechanism to invoke isolated sub-agents, it applies the same procedure inline, one entry at a time.
+
+All of them follow the "Persistent pull request" flow described above, which is why they are only installed for the GitHub backend.
