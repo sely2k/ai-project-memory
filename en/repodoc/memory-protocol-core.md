@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.5.0 -->
+<!-- repodoc:version 1.6.0 -->
 
 # Persistent memory protocol
 
@@ -59,9 +59,9 @@ Adapt document types to what already exists. Do not create unnecessary documents
 * `OPEN-xxx-<title>`: open questions;
 * `ADR-xxx-<title>`: decisions;
 * `SPEC-xxx-<title>`: specifications (one YAML file per spec, see [Specifications](#specifications));
-* `specs-catalog`: a synthesized catalog of high-level specs not yet formalized as `SPEC-xxx-<title>` (see [Specifications](#specifications));
+* `specs-catalog`: a synthesized catalog of high-level specs not yet formalized as `SPEC-xxx-<title>`; it lives **always and only** in the path the configured backend assigns to this type (never inside `knowledge`, `research`, or anywhere else) — see [Specifications](#specifications);
 * `research`: research;
-* `knowledge`: stable knowledge.
+* `knowledge`: stable, consolidated knowledge — not a list of future work or not-yet-formalized specs: that belongs exclusively to `specs-catalog`.
 
 Create these documents only when needed. The concrete location of each type (file path, folder, or page) depends on the configured backend: see [Memory backend](#memory-backend).
 
@@ -127,6 +127,8 @@ Minimum sections:
 When a question is resolved, update `Status` to `resolved`. If the resolution is a significant decision, create or update the corresponding ADR instead of leaving the knowledge only in the OPEN.
 
 ## Specifications
+
+The `specs-catalog` must be written **exclusively** to the path the configured backend assigns to this type (see [Memory backend](#memory-backend)). Do not create it, move it, or duplicate it elsewhere — not even inside `knowledge` — even when the content reads like a roadmap or general knowledge.
 
 Specifications often start as synthesized entries in the `specs-catalog`: a bullet list of high-level proposals not yet formalized, typically produced when a situation (an open point, a decision, a requirement) closes and future work worth tracking emerges. Each entry carries a provisional `SPEC-xxx` identifier, a short title, a one-line summary, and a link to the source documents. When a catalog entry is ready to be detailed, turn it into the `SPEC-xxx-<title>` YAML file described below and replace the catalog entry with a link to the canonical file, so the same knowledge is not kept duplicated in two places.
 

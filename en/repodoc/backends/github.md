@@ -24,6 +24,8 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `research` | `repodoc/research/` |
 | `knowledge` | `repodoc/knowledge/` |
 
+The high-level specs catalog goes **always and only** in `repodoc/specs/features.md`: do not create it, move it, or duplicate it in `repodoc/knowledge/` or anywhere else, even if the content reads like a roadmap or general knowledge.
+
 ### Links
 
 Connect documents to one another with relative links.

@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.5.0 -->
+<!-- repodoc:version 1.6.0 -->
 
 # Protocollo di memoria persistente
 
@@ -60,9 +60,9 @@ Adatta i tipi di documento a quelli già esistenti. Non creare documenti o tipi 
 * `OPEN-xxx-<title>`: questioni aperte;
 * `ADR-xxx-<title>`: decisioni;
 * `SPEC-xxx-<title>`: specifiche (uno YAML per specifica, vedi [Specifiche](#specifiche));
-* `specs-catalog`: catalogo sintetico di specifiche di alto livello non ancora formalizzate come `SPEC-xxx-<title>` (vedi [Specifiche](#specifiche));
+* `specs-catalog`: catalogo sintetico di specifiche di alto livello non ancora formalizzate come `SPEC-xxx-<title>`; vive **sempre e soltanto** nel percorso che il backend configurato assegna a questo tipo (mai dentro `knowledge`, `research` o altrove) — vedi [Specifiche](#specifiche);
 * `research`: ricerche;
-* `knowledge`: conoscenza stabile.
+* `knowledge`: conoscenza stabile consolidata — non un elenco di lavoro futuro o specifiche non ancora formalizzate: quello appartiene esclusivamente a `specs-catalog`.
 
 Crea questi documenti solo quando servono. La posizione concreta di ciascun tipo (percorso file, cartella o pagina) dipende dal backend configurato: vedi [Backend di memoria](#backend-di-memoria).
 
@@ -136,6 +136,8 @@ Sezioni minime:
 Quando una questione si risolve, aggiorna lo `Status` a `resolved`. Se la risoluzione è una decisione significativa, crea o aggiorna l'ADR corrispondente invece di lasciare la conoscenza solo nell'OPEN.
 
 ## Specifiche
+
+Il catalogo `specs-catalog` va scritto **esclusivamente** nel percorso che il backend configurato assegna a questo tipo (vedi [Backend di memoria](#backend-di-memoria)). Non crearlo, spostarlo o duplicarlo altrove — nemmeno dentro `knowledge` — neanche quando il contenuto assomiglia a una roadmap o a conoscenza generale.
 
 Le specifiche nascono spesso come voci sintetiche nel catalogo `specs-catalog`: un elenco puntato di proposte di alto livello non ancora formalizzate, tipicamente prodotto quando una situazione (open point, decisione, requisito) si chiude ed emerge lavoro futuro degno di essere tracciato. Ogni voce riporta un identificativo provvisorio `SPEC-xxx`, un titolo breve, una sintesi in una riga e un collegamento ai documenti di origine. Quando una voce del catalogo è pronta per essere dettagliata, trasformala nel file YAML `SPEC-xxx-<title>` descritto sotto e sostituisci la voce del catalogo con un collegamento al file canonico, così da non mantenere la stessa conoscenza duplicata in due punti.
 

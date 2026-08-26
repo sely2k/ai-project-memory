@@ -24,6 +24,8 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `research` | `repodoc/research/` |
 | `knowledge` | `repodoc/knowledge/` |
 
+Il catalogo delle specifiche di alto livello va **sempre e soltanto** in `repodoc/specs/features.md`: non crearlo, spostarlo o duplicarlo in `repodoc/knowledge/` o altrove, anche se il contenuto sembra una roadmap o conoscenza generale.
+
 ### Collegamenti
 
 Collega i documenti tra loro con link relativi.
