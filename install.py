@@ -6,7 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
-REPODOC_VERSION = "1.6.0"
+REPODOC_VERSION = "1.9.0"
 
 from pathlib import Path
 import re
@@ -27,34 +27,43 @@ TOOL_FILES = {
     "codex": ("codex/AGENTS.md", "AGENTS.md"),
     "copilot": ("copilot/copilot-instructions.md", ".github/copilot-instructions.md"),
 }
-# Tools whose instructions currently hardcode the GitHub flow and cannot yet
-# target another backend.
-GITHUB_ONLY_TOOLS = {"chatgpt-project", "claude-project"}
 PROTOCOL_CORE = "repodoc/memory-protocol-core.md"
 PROTOCOL_DESTINATION = "repodoc/memory-protocol.md"
 
-# RepoDoc agents: standalone, dedicated files (not managed-block merges) that
-# operate the persistent GitHub PR flow, so they are only installed for the
-# 'github' backend, like GITHUB_ONLY_TOOLS above (but in the opposite sense).
+# RepoDoc agents are standalone dedicated files, not managed-block merges.
+# Memory-changing agents use the active working tree from CLI and the persistent
+# GitHub PR from chat; doctor stays read-only; implementation uses code branches.
 AGENT_FILES = {
     "claude-code": [
+        ("claude-code/agents/bootstrap.md", ".claude/agents/repodoc-bootstrap.md"),
+        ("claude-code/agents/doctor.md", ".claude/agents/repodoc-doctor.md"),
         ("claude-code/agents/consistency-check.md", ".claude/agents/repodoc-consistency-check.md"),
         ("claude-code/agents/close-openpoint.md", ".claude/agents/repodoc-close-openpoint.md"),
         ("claude-code/agents/synthesize-specs.md", ".claude/agents/repodoc-synthesize-specs.md"),
         ("claude-code/agents/expand-specs.md", ".claude/agents/repodoc-expand-specs.md"),
         ("claude-code/agents/expand-spec-worker.md", ".claude/agents/repodoc-expand-spec-worker.md"),
+        ("claude-code/agents/implement-specs.md", ".claude/agents/repodoc-implement-specs.md"),
+        ("claude-code/agents/implement-spec-worker.md", ".claude/agents/repodoc-implement-spec-worker.md"),
     ],
     "codex": [
+        ("codex/agents/bootstrap.toml", ".codex/agents/repodoc-bootstrap.toml"),
+        ("codex/agents/doctor.toml", ".codex/agents/repodoc-doctor.toml"),
         ("codex/agents/consistency-check.toml", ".codex/agents/repodoc-consistency-check.toml"),
         ("codex/agents/close-openpoint.toml", ".codex/agents/repodoc-close-openpoint.toml"),
         ("codex/agents/synthesize-specs.toml", ".codex/agents/repodoc-synthesize-specs.toml"),
         ("codex/agents/expand-specs.toml", ".codex/agents/repodoc-expand-specs.toml"),
+        ("codex/agents/implement-specs.toml", ".codex/agents/repodoc-implement-specs.toml"),
+        ("codex/agents/implement-spec-worker.toml", ".codex/agents/repodoc-implement-spec-worker.toml"),
     ],
     "copilot": [
+        ("copilot/agents/bootstrap.agent.md", ".github/agents/repodoc-bootstrap.agent.md"),
+        ("copilot/agents/doctor.agent.md", ".github/agents/repodoc-doctor.agent.md"),
         ("copilot/agents/consistency-check.agent.md", ".github/agents/repodoc-consistency-check.agent.md"),
         ("copilot/agents/close-openpoint.agent.md", ".github/agents/repodoc-close-openpoint.agent.md"),
         ("copilot/agents/synthesize-specs.agent.md", ".github/agents/repodoc-synthesize-specs.agent.md"),
         ("copilot/agents/expand-specs.agent.md", ".github/agents/repodoc-expand-specs.agent.md"),
+        ("copilot/agents/implement-specs.agent.md", ".github/agents/repodoc-implement-specs.agent.md"),
+        ("copilot/agents/implement-spec-worker.agent.md", ".github/agents/repodoc-implement-spec-worker.agent.md"),
     ],
 }
 # The spec-expansion skill is authored once and dropped at whichever
@@ -66,12 +75,7 @@ SKILL_DESTINATIONS = {
     "codex": ".agents/skills/repodoc-spec-expand/SKILL.md",
     "copilot": ".agents/skills/repodoc-spec-expand/SKILL.md",
 }
-AGENT_BACKENDS = {"github"}
-BACKENDS = {
-    "github": "repodoc/backends/github.md",
-    "google-docs": "repodoc/backends/google-docs.md",
-    "notion": "repodoc/backends/notion.md",
-}
+GITHUB_BACKEND = "repodoc/backends/github.md"
 MANAGED_TOOLS = {"claude-code", "codex", "copilot"}
 MANAGED_BLOCK_START = "<!-- repodoc:start -->"
 MANAGED_BLOCK_VERSION = f"<!-- repodoc:version {REPODOC_VERSION} -->"
@@ -136,70 +140,6 @@ def ask_repository(target: Path, language: str) -> str:
         print(error)
 
 
-def choose_backend(language: str) -> str:
-    labels = {
-        "en": {
-            "prompt": "Where should persistent memory live? (choose one)",
-            "instruction": "(↑/↓ to choose • Enter to confirm)",
-            "github": "GitHub       → a repository, pull-request based",
-            "google-docs": "Google Docs  → a Drive folder (preview: parameters only, no live writes yet)",
-            "notion": "Notion       → a page (preview: parameters only, no live writes yet)",
-        },
-        "it": {
-            "prompt": "Dove deve vivere la memoria persistente? (scegline una)",
-            "instruction": "(↑/↓ sposta • Invio conferma)",
-            "github": "GitHub       → una repository, basato su pull request",
-            "google-docs": "Google Docs  → una cartella Drive (anteprima: solo parametri, scrittura reale non ancora attiva)",
-            "notion": "Notion       → una pagina (anteprima: solo parametri, scrittura reale non ancora attiva)",
-        },
-    }[language]
-    if sys.stdin.isatty() and sys.stdout.isatty():
-        value = questionary.select(
-            labels["prompt"],
-            choices=[
-                Choice(labels["github"], value="github"),
-                Choice(labels["google-docs"], value="google-docs"),
-                Choice(labels["notion"], value="notion"),
-            ],
-            default="github",
-            instruction=labels["instruction"],
-        ).ask()
-        if value is None:
-            raise KeyboardInterrupt
-        return value
-
-    print("Backend: 1) GitHub  2) Google Docs  3) Notion" if language == "en" else "Backend: 1) GitHub  2) Google Docs  3) Notion")
-    aliases = {"1": "github", "github": "github", "2": "google-docs", "google-docs": "google-docs", "gdoc": "google-docs", "3": "notion", "notion": "notion"}
-    prompt = "Select backend" if language == "en" else "Seleziona il backend"
-    error = "Choose 1, 2, or 3." if language == "en" else "Scegli 1, 2 o 3."
-    while True:
-        value = ask(prompt, "1").strip().lower()
-        backend = aliases.get(value)
-        if backend:
-            return backend
-        print(error)
-
-
-def ask_google_drive_folder(language: str) -> str:
-    prompt = "Google Drive folder (name, path, or URL)" if language == "en" else "Cartella Google Drive (nome, percorso o URL)"
-    error = "Enter a folder name, path, or URL." if language == "en" else "Inserisci un nome, percorso o URL della cartella."
-    while True:
-        value = ask(prompt, "").strip()
-        if value:
-            return value
-        print(error)
-
-
-def ask_notion_page(language: str) -> str:
-    prompt = "Notion parent page (name or URL)" if language == "en" else "Pagina Notion di riferimento (nome o URL)"
-    error = "Enter a page name or URL." if language == "en" else "Inserisci un nome o URL della pagina."
-    while True:
-        value = ask(prompt, "").strip()
-        if value:
-            return value
-        print(error)
-
-
 def choose_language() -> str:
     if sys.stdin.isatty() and sys.stdout.isatty():
         value = questionary.select(
@@ -222,17 +162,8 @@ def choose_language() -> str:
         print("Choose 'en' or 'it'. / Scegli 'en' o 'it'.")
 
 
-def choose_tools(language: str, backend: str) -> list[str]:
-    available_tools = TOOL_FILES if backend == "github" else {
-        tool: paths for tool, paths in TOOL_FILES.items() if tool not in GITHUB_ONLY_TOOLS
-    }
-    if backend != "github":
-        message = (
-            f"ChatGPT Project and Claude Project instructions still assume a GitHub backend and are skipped for '{backend}'."
-            if language == "en"
-            else f"Le istruzioni per ChatGPT Project e Claude Project assumono ancora un backend GitHub e non sono disponibili per '{backend}'."
-        )
-        print(message)
+def choose_tools(language: str) -> list[str]:
+    available_tools = TOOL_FILES
     labels = {
         "en": {
             "prompt": "Which tools do you want to configure?",
@@ -363,9 +294,9 @@ def render_template(content: str, replacements: dict[str, str], language: str) -
     return content.replace(placeholder_notes[language], "")
 
 
-def compose_protocol(language: str, backend: str) -> str:
+def compose_protocol(language: str) -> str:
     core = read_template(language, PROTOCOL_CORE)
-    fragment = read_template(language, BACKENDS[backend])
+    fragment = read_template(language, GITHUB_BACKEND)
     return f"{core.rstrip()}\n\n{fragment.strip()}\n"
 
 
@@ -464,29 +395,18 @@ def install_managed_file(source: str, destination: str, language: str, replaceme
 def main() -> int:
     language = choose_language()
     target = Path.cwd().resolve()
-    backend = choose_backend(language)
-    if backend == "github":
-        repository = ask_repository(target, language)
-        replacements = {"GITHUB_REPOSITORY": repository}
-        backend_summary = repository
-    elif backend == "google-docs":
-        folder = ask_google_drive_folder(language)
-        replacements = {"GOOGLE_DRIVE_FOLDER": folder}
-        backend_summary = folder
-    else:
-        page = ask_notion_page(language)
-        replacements = {"NOTION_PARENT_PAGE": page}
-        backend_summary = page
-    tools = choose_tools(language, backend)
+    repository = ask_repository(target, language)
+    replacements = {"GITHUB_REPOSITORY": repository}
+    tools = choose_tools(language)
 
     print(f"\nTarget: {target}")
-    print(f"Backend: {backend} ({backend_summary})")
+    print(f"Backend: GitHub ({repository})")
     print(f"Language: {language}")
     print(f"Tools: {', '.join(tools)}\n")
 
     installed = 0
     overwrite_all = False
-    protocol_content = render_template(compose_protocol(language, backend), replacements, language)
+    protocol_content = render_template(compose_protocol(language), replacements, language)
     was_installed, overwrite_all = write_installed_file(PROTOCOL_DESTINATION, protocol_content, language, target, overwrite_all)
     installed += was_installed
     for tool in tools:
@@ -498,26 +418,25 @@ def main() -> int:
         installed += was_installed
 
     agent_capable_tools = [tool for tool in tools if tool in AGENT_FILES]
-    if agent_capable_tools and backend not in AGENT_BACKENDS:
-        message = (
-            f"RepoDoc agents (consistency check, close open point, synthesize specs) still assume the GitHub persistent-PR flow and are skipped for '{backend}'."
-            if language == "en"
-            else f"Gli agenti RepoDoc (verifica coerenza, chiusura open point, sintesi specifiche) assumono ancora il flusso PR di GitHub e non sono installati per il backend '{backend}'."
-        )
-        print(message)
-    elif backend in AGENT_BACKENDS:
-        installed_skill_destinations: set[str] = set()
-        for tool in agent_capable_tools:
-            for source, destination in AGENT_FILES[tool]:
-                was_installed, overwrite_all = install_file(source, destination, language, replacements, target, overwrite_all)
-                installed += was_installed
-            skill_destination = SKILL_DESTINATIONS.get(tool)
-            if skill_destination and skill_destination not in installed_skill_destinations:
-                was_installed, overwrite_all = install_file(SKILL_FILE, skill_destination, language, replacements, target, overwrite_all)
-                installed += was_installed
-                installed_skill_destinations.add(skill_destination)
+    installed_skill_destinations: set[str] = set()
+    for tool in agent_capable_tools:
+        for source, destination in AGENT_FILES[tool]:
+            was_installed, overwrite_all = install_file(source, destination, language, replacements, target, overwrite_all)
+            installed += was_installed
+        skill_destination = SKILL_DESTINATIONS.get(tool)
+        if skill_destination and skill_destination not in installed_skill_destinations:
+            was_installed, overwrite_all = install_file(SKILL_FILE, skill_destination, language, replacements, target, overwrite_all)
+            installed += was_installed
+            installed_skill_destinations.add(skill_destination)
 
     print(f"\nDone. {installed} file(s) installed.")
+    if agent_capable_tools:
+        if language == "en":
+            print('Next step: ask your assistant to "Initialize RepoDoc for this project."')
+            print("Run repodoc-doctor whenever you want a read-only installation diagnosis.")
+        else:
+            print('Prossimo passo: chiedi al tuo assistente "Inizializza RepoDoc per questo progetto."')
+            print("Esegui repodoc-doctor quando vuoi una diagnosi read-only dell'installazione.")
     return 0
 
 

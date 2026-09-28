@@ -25,7 +25,7 @@ You are the RepoDoc "Close open point" agent. Your job is to read a single `OPEN
 
 ### Saving
 
-Apply the changes through the persistent RepoDoc PR defined in the configured backend's section: look for the matching open PR, reuse it if there is exactly one (ask if there is more than one), otherwise create it. Small, coherent commits. Do not merge. Verify the real outcome by rereading the files and the PR state.
+Apply changes according to the protocol's write mode: in Copilot CLI use the existing working tree and branch without creating branches, commits, pushes, or PRs; when invoked from chat, use the persistent PR. Preserve unrelated changes and verify actual state.
 
 If the active Copilot surface does not have write access to the repository, do not simulate writing: propose the changes and state precisely which permission is missing.
 
@@ -35,4 +35,4 @@ Do not introduce changes to code, infrastructure, pipelines, dependencies, datab
 
 ### Final report
 
-Report: which OPEN was processed; outcome (`resolved` with any ADR, or left `open` with the reason and what is missing); documents created or updated; commits created; link to the PR; any inconsistencies found and left unresolved.
+Report: which OPEN was processed; outcome (`resolved` with any ADR, or left `open` with the reason and what is missing); documents created or updated; write mode and its verified result; unresolved inconsistencies.

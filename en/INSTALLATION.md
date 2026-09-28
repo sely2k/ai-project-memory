@@ -4,48 +4,50 @@ This language package contains the English templates to deploy into a target rep
 
 ## Memory backend
 
-The shared protocol is no longer a single file: `repodoc/memory-protocol.md` is **composed** by combining a backend-agnostic core with the operating rules of **one** backend chosen among:
-
-| Backend | Source fragment | Placeholder |
-|---|---|---|
-| GitHub | `en/repodoc/backends/github.md` | `GITHUB_REPOSITORY: <owner>/<repo>` |
-| Google Docs (preview: parameters only, no live writes yet) | `en/repodoc/backends/google-docs.md` | `GOOGLE_DRIVE_FOLDER: <folder>` |
-| Notion (preview: parameters only, no live writes yet) | `en/repodoc/backends/notion.md` | `NOTION_PARENT_PAGE: <page>` |
-
-`install.py` asks which backend to use, then composes `en/repodoc/memory-protocol-core.md` + the chosen backend fragment, substitutes the placeholder, and writes the result to `repodoc/memory-protocol.md`.
-
-ChatGPT Project and Claude Project still assume a GitHub flow and are only offered when the chosen backend is GitHub.
+GitHub is the supported memory backend. `install.py` composes `en/repodoc/memory-protocol-core.md` with `en/repodoc/backends/github.md`, substitutes `GITHUB_REPOSITORY: <owner>/<repo>`, and writes the result to `repodoc/memory-protocol.md`.
 
 | Tool | Source file | Target path | Installation |
 |---|---|---|---|
-| Shared protocol | `en/repodoc/memory-protocol-core.md` + `en/repodoc/backends/<backend>.md` | `repodoc/memory-protocol.md` | The installer composes both files and substitutes the chosen backend's placeholder. Every CLI wrapper references the resulting file. |
+| Shared protocol | `en/repodoc/memory-protocol-core.md` + `en/repodoc/backends/github.md` | `repodoc/memory-protocol.md` | The installer composes both files and substitutes the GitHub repository. Every CLI wrapper references the resulting file. |
 | Claude Code | `en/claude-code/CLAUDE.md` | `.claude/CLAUDE.md` | Create `.claude/` if needed. |
 | OpenAI Codex CLI | `en/codex/AGENTS.md` | `AGENTS.md` | Copy to the repository root. |
 | GitHub Copilot | `en/copilot/copilot-instructions.md` | `.github/copilot-instructions.md` | Create `.github/` if needed. |
-| ChatGPT Project (GitHub backend only) | `en/chatgpt/instruction.md` | `repodoc/chatgpt-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project instructions. |
-| Claude Project (GitHub backend only) | `en/claude/instruction.md` | `repodoc/claude-chat-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project Instructions. |
+| ChatGPT Project | `en/chatgpt/instruction.md` | `repodoc/chatgpt-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project instructions. |
+| Claude Project | `en/claude/instruction.md` | `repodoc/claude-chat-instruction.md` | The installer replaces `<owner>/<repo>`; then paste the content into Project Instructions. |
 
-### RepoDoc agents (GitHub backend only)
+### RepoDoc agents
 
-Besides the base instructions file, for each selected tool the installer also copies the dedicated agents defined in `install.py` (`AGENT_FILES`) and the spec-expansion skill (`SKILL_FILE`/`SKILL_DESTINATIONS`). They are installed **only when the chosen backend is GitHub**, because they operate the persistent PR flow described in `en/repodoc/backends/github.md`.
+Besides the base instructions file, for each selected tool the installer also copies the dedicated agents defined in `install.py` (`AGENT_FILES`) and the spec-expansion skill (`SKILL_FILE`/`SKILL_DESTINATIONS`). From a CLI, memory agents edit the active working tree without creating branches, commits, pushes, or PRs; from chat they use the persistent PR. `repodoc-doctor` is always read-only, while implementation agents retain their dedicated code-branch flow.
 
 | Tool | Source file | Target path in the target repository |
 |---|---|---|
+| Claude Code | `en/claude-code/agents/bootstrap.md` | `.claude/agents/repodoc-bootstrap.md` |
+| Claude Code | `en/claude-code/agents/doctor.md` | `.claude/agents/repodoc-doctor.md` |
 | Claude Code | `en/claude-code/agents/consistency-check.md` | `.claude/agents/repodoc-consistency-check.md` |
 | Claude Code | `en/claude-code/agents/close-openpoint.md` | `.claude/agents/repodoc-close-openpoint.md` |
 | Claude Code | `en/claude-code/agents/synthesize-specs.md` | `.claude/agents/repodoc-synthesize-specs.md` |
 | Claude Code | `en/claude-code/agents/expand-specs.md` | `.claude/agents/repodoc-expand-specs.md` |
 | Claude Code | `en/claude-code/agents/expand-spec-worker.md` | `.claude/agents/repodoc-expand-spec-worker.md` |
+| Claude Code | `en/claude-code/agents/implement-specs.md` | `.claude/agents/repodoc-implement-specs.md` |
+| Claude Code | `en/claude-code/agents/implement-spec-worker.md` | `.claude/agents/repodoc-implement-spec-worker.md` |
 | Claude Code | `en/skills/spec-expand/SKILL.md` | `.claude/skills/repodoc-spec-expand/SKILL.md` |
+| OpenAI Codex CLI | `en/codex/agents/bootstrap.toml` | `.codex/agents/repodoc-bootstrap.toml` |
+| OpenAI Codex CLI | `en/codex/agents/doctor.toml` | `.codex/agents/repodoc-doctor.toml` |
 | OpenAI Codex CLI | `en/codex/agents/consistency-check.toml` | `.codex/agents/repodoc-consistency-check.toml` |
 | OpenAI Codex CLI | `en/codex/agents/close-openpoint.toml` | `.codex/agents/repodoc-close-openpoint.toml` |
 | OpenAI Codex CLI | `en/codex/agents/synthesize-specs.toml` | `.codex/agents/repodoc-synthesize-specs.toml` |
 | OpenAI Codex CLI | `en/codex/agents/expand-specs.toml` | `.codex/agents/repodoc-expand-specs.toml` |
+| OpenAI Codex CLI | `en/codex/agents/implement-specs.toml` | `.codex/agents/repodoc-implement-specs.toml` |
+| OpenAI Codex CLI | `en/codex/agents/implement-spec-worker.toml` | `.codex/agents/repodoc-implement-spec-worker.toml` |
 | OpenAI Codex CLI | `en/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` |
+| GitHub Copilot | `en/copilot/agents/bootstrap.agent.md` | `.github/agents/repodoc-bootstrap.agent.md` |
+| GitHub Copilot | `en/copilot/agents/doctor.agent.md` | `.github/agents/repodoc-doctor.agent.md` |
 | GitHub Copilot | `en/copilot/agents/consistency-check.agent.md` | `.github/agents/repodoc-consistency-check.agent.md` |
 | GitHub Copilot | `en/copilot/agents/close-openpoint.agent.md` | `.github/agents/repodoc-close-openpoint.agent.md` |
 | GitHub Copilot | `en/copilot/agents/synthesize-specs.agent.md` | `.github/agents/repodoc-synthesize-specs.agent.md` |
 | GitHub Copilot | `en/copilot/agents/expand-specs.agent.md` | `.github/agents/repodoc-expand-specs.agent.md` |
+| GitHub Copilot | `en/copilot/agents/implement-specs.agent.md` | `.github/agents/repodoc-implement-specs.agent.md` |
+| GitHub Copilot | `en/copilot/agents/implement-spec-worker.agent.md` | `.github/agents/repodoc-implement-spec-worker.agent.md` |
 | GitHub Copilot | `en/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` (skipped if Codex already wrote it) |
 
 The `repodoc-spec-expand` skill is authored once and copied to whichever native discovery path each selected tool uses: `.claude/skills/` for Claude Code, `.agents/skills/` for Codex and Copilot CLI (which share it). If both Codex and Copilot are selected, the file is written only once.
@@ -57,26 +59,38 @@ The `repodoc-spec-expand` skill is authored once and copied to whichever native 
 ├── .claude/
 │   ├── CLAUDE.md
 │   ├── agents/
+│   │   ├── repodoc-bootstrap.md
+│   │   ├── repodoc-doctor.md
 │   │   ├── repodoc-consistency-check.md
 │   │   ├── repodoc-close-openpoint.md
 │   │   ├── repodoc-synthesize-specs.md
 │   │   ├── repodoc-expand-specs.md
-│   │   └── repodoc-expand-spec-worker.md
+│   │   ├── repodoc-expand-spec-worker.md
+│   │   ├── repodoc-implement-specs.md
+│   │   └── repodoc-implement-spec-worker.md
 │   └── skills/
 │       └── repodoc-spec-expand/SKILL.md
 ├── .codex/
 │   └── agents/
+│       ├── repodoc-bootstrap.toml
+│       ├── repodoc-doctor.toml
 │       ├── repodoc-consistency-check.toml
 │       ├── repodoc-close-openpoint.toml
 │       ├── repodoc-synthesize-specs.toml
-│       └── repodoc-expand-specs.toml
+│       ├── repodoc-expand-specs.toml
+│       ├── repodoc-implement-specs.toml
+│       └── repodoc-implement-spec-worker.toml
 ├── .github/
 │   ├── copilot-instructions.md
 │   └── agents/
+│       ├── repodoc-bootstrap.agent.md
+│       ├── repodoc-doctor.agent.md
 │       ├── repodoc-consistency-check.agent.md
 │       ├── repodoc-close-openpoint.agent.md
 │       ├── repodoc-synthesize-specs.agent.md
-│       └── repodoc-expand-specs.agent.md
+│       ├── repodoc-expand-specs.agent.md
+│       ├── repodoc-implement-specs.agent.md
+│       └── repodoc-implement-spec-worker.agent.md
 ├── .agents/
 │   └── skills/
 │       └── repodoc-spec-expand/SKILL.md
@@ -86,8 +100,6 @@ The `repodoc-spec-expand` skill is authored once and copied to whichever native 
 │   └── claude-chat-instruction.md
 └── AGENTS.md
 ```
-
-(the agent files, `.codex/agents/`, `.github/agents/`, and `.agents/skills/` are only present when the backend is GitHub.)
 
 ## Notes
 

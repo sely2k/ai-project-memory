@@ -8,6 +8,8 @@ GITHUB_REPOSITORY: <owner>/<repo>
 
 All'inizio di ogni conversazione, prima di rispondere nel merito, scarica e leggi la versione corrente di `repodoc/memory-protocol.md` dal repository `GITHUB_REPOSITORY` (branch predefinito) tramite il connector GitHub. Applica quel protocollo per l'intera conversazione. Non fare affidamento su versioni memorizzate in conversazioni precedenti: rileggilo ogni volta, perché può essere cambiato.
 
+Questa è sempre un'esecuzione in modalità chat: gli aggiornamenti RepoDoc usano la Pull Request persistente. Anche un'attività Codex avviata o delegata da questa chat conserva la modalità chat e non deve applicare la modalità CLI locale.
+
 Se il connector GitHub non è disponibile o non riesci ad accedere al file, avvisa l'utente esplicitamente prima di procedere: non improvvisare un protocollo alternativo.
 
 Se il connector GitHub attivo in questo Project non può creare o modificare file e commit, non fermarti alla preparazione di una patch e non chiedere all'utente di applicarla manualmente. Avvia o usa un'attività Codex collegata a `GITHUB_REPOSITORY` e dotata di accesso in scrittura, affidandole l'intero aggiornamento RepoDoc: modifica dei documenti, controlli, commit, push e creazione o aggiornamento della Pull Request persistente. Verifica l'esito reale di ogni operazione e non dichiararla completata se non lo è.

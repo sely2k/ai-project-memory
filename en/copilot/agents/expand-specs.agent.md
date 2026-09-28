@@ -1,40 +1,12 @@
 ---
 name: RepoDoc - Expand all specs
-description: Reads the repodoc/specs/features.md catalog and turns, one entry at a time, every not-yet-formalized entry into a complete, detailed SPEC-xxx-<title>.yaml file, referenced against relevant ADRs/REQs/OPENs/architecture, with activities, subtasks, and acceptance criteria.
+description: Expands all or selected draft/proposed repodoc/specs/SPEC-*.yaml files in place with detailed, evidence-backed implementation content.
 ---
 
-## Instructions
+Read the current `repodoc/memory-protocol.md`. Enumerate existing `repodoc/specs/SPEC-*.yaml` files with status `draft` or `proposed`, limited to a user-selected subset when given. Resolve the write mode once: Copilot CLI in the active working tree or chat through the persistent PR.
 
-You are the RepoDoc "Expand all specs" agent. Your job is to bring every not-yet-formalized entry of the `repodoc/specs/features.md` catalog to a complete YAML file.
+Process each SPEC sequentially as an isolated task. Re-read related project, architecture, REQ, ADR, OPEN, research, knowledge, and SPEC documents. Update the same YAML file with supported problem/context, proposal, scope and out of scope, boundaries, ordered activities, atomic subtasks, objective acceptance criteria, dependencies and relations, related documents, and readiness notes. Preserve its id and path; never create a catalog or replacement representation and never invent unresolved decisions. Update `repodoc/specs/index.md` in the same operation so every SPEC appears exactly once in the section matching its status, and ensure `repodoc/index.md` links to it. In CLI do not create branches, commits, pushes, or PRs; in chat follow the persistent PR.
 
-Platform note: GitHub Copilot's agent format does not offer, in this repository, a mechanism to explicitly invoke an isolated sub-agent during execution (unlike Claude Code, where this same agent delegates each entry to a dedicated `repodoc-expand-spec-worker` sub-agent). Apply the same procedure **inline** instead, one entry at a time, treating each entry as an isolated task: gather evidence from scratch for each one, without reusing assumptions made for previous entries in the same session.
+Expanding is not approval: keep `draft` until reviewable; use `proposed` when reviewable or complete but awaiting approval; use `ready` only when complete and explicitly approved by the user or consolidated documentation. Never publish an issue and keep GitHub fields null.
 
-### Before starting
-
-Read `repodoc/memory-protocol.md` exactly as it stands in the repository now and apply its current version for the whole session.
-
-### Task
-
-1. **Enumerate the entries to expand** in `repodoc/specs/features.md`: those not yet replaced by a link to an existing `SPEC-xxx-<title>.yaml`. If the user named a subset, limit the list to that; otherwise process all of them. If there is nothing to expand, report that and stop.
-2. **Resolve the persistent RepoDoc PR once**, before starting (look for an open PR matching the expected title; reuse the branch if exactly one exists; ask which one to use if there is more than one; create it if none exists). Use the same branch for every entry in this batch.
-3. **For each entry, one at a time**:
-   - consult `repodoc/project.md`, `repodoc/architecture.md`, and every requirement, ADR, open point, research note, and document related to the entry;
-   - respect naming, responsibilities, and dependency boundaries already established; do not arbitrarily introduce technical decisions that are still open;
-   - write `repodoc/specs/SPEC-xxx-<title>.yaml` with at least: problem and context; proposal; scope and out of scope; relevant rules, responsibilities, and dependency boundaries; detailed, ordered implementation activities; specific, atomic, verifiable subtasks; objective acceptance criteria, ideally tied to commands, exit codes, tests, or observable checks; dependencies and relations (`relations.parent`/`children`/`related`) to other SPECs; related documentation; readiness notes on any decisions still missing;
-   - status `draft` if decisions remain unresolved, `ready` only if every protocol criterion is satisfied; never publish it as a GitHub issue (`github.issue: null`, `github.synced_at: null`);
-   - update `repodoc/specs/features.md`, replacing the synthesized entry with a link to the YAML file, without altering the other entries;
-   - create a small, coherent commit for this entry before moving to the next.
-4. If an entry cannot be completed (a missing decision), note it in the report and still move to the next one instead of aborting the whole batch.
-5. At the end, actually verify the repository state by rereading commits, branch, and PR.
-
-### Saving
-
-If the active Copilot mode has no write access to the repository, do not simulate writing: propose the changes and state precisely which permission is missing.
-
-### Limits
-
-Do not publish GitHub issues. Do not modify code, infrastructure, pipelines, dependencies, databases, or configuration.
-
-### Final report
-
-Report: entries processed with their SPEC-xxx id and assigned status; entries left draft with the missing decision or information; entries not processed and why; total commits created; link to the persistent RepoDoc PR; confirmation that no GitHub issue was published.
+Continue past incomplete specs, verify final files and the applicable persistence, and report statuses, missing information or approval, skips, changed files, and confirmation that no issue was published.

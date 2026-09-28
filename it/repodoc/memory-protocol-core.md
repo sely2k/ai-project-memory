@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.6.0 -->
+<!-- repodoc:version 1.9.0 -->
 
 # Protocollo di memoria persistente
 
@@ -59,10 +59,10 @@ Adatta i tipi di documento a quelli già esistenti. Non creare documenti o tipi 
 * `REQ-xxx-<title>`: requisiti;
 * `OPEN-xxx-<title>`: questioni aperte;
 * `ADR-xxx-<title>`: decisioni;
-* `SPEC-xxx-<title>`: specifiche (uno YAML per specifica, vedi [Specifiche](#specifiche));
-* `specs-catalog`: catalogo sintetico di specifiche di alto livello non ancora formalizzate come `SPEC-xxx-<title>`; vive **sempre e soltanto** nel percorso che il backend configurato assegna a questo tipo (mai dentro `knowledge`, `research` o altrove) — vedi [Specifiche](#specifiche);
+* `SPEC-xxx-<title>`: specifiche, incluso il lavoro proposto (uno YAML per specifica, vedi [Specifiche](#specifiche));
+* `specs-index`: indice di navigazione di tutte le SPEC, raggruppate per stato del ciclo di vita;
 * `research`: ricerche;
-* `knowledge`: conoscenza stabile consolidata — non un elenco di lavoro futuro o specifiche non ancora formalizzate: quello appartiene esclusivamente a `specs-catalog`.
+* `knowledge`: conoscenza stabile consolidata — non lavoro proposto o pianificato, che appartiene ai file `SPEC-xxx-<title>`.
 
 Crea questi documenti solo quando servono. La posizione concreta di ciascun tipo (percorso file, cartella o pagina) dipende dal backend configurato: vedi [Backend di memoria](#backend-di-memoria).
 
@@ -137,27 +137,29 @@ Quando una questione si risolve, aggiorna lo `Status` a `resolved`. Se la risolu
 
 ## Specifiche
 
-Il catalogo `specs-catalog` va scritto **esclusivamente** nel percorso che il backend configurato assegna a questo tipo (vedi [Backend di memoria](#backend-di-memoria)). Non crearlo, spostarlo o duplicarlo altrove — nemmeno dentro `knowledge` — neanche quando il contenuto assomiglia a una roadmap o a conoscenza generale.
+Crea un file YAML `SPEC-xxx-<title>` non appena vale la pena tracciare un lavoro proposto. Non mantenere specifiche preliminari in un elenco o catalogo separato: lo stesso file evolve da proposta a specifica pronta per l'implementazione, conservando un solo identificativo e una sola fonte di verità per tutto il ciclo di vita.
 
-Le specifiche nascono spesso come voci sintetiche nel catalogo `specs-catalog`: un elenco puntato di proposte di alto livello non ancora formalizzate, tipicamente prodotto quando una situazione (open point, decisione, requisito) si chiude ed emerge lavoro futuro degno di essere tracciato. Ogni voce riporta un identificativo provvisorio `SPEC-xxx`, un titolo breve, una sintesi in una riga e un collegamento ai documenti di origine. Quando una voce del catalogo è pronta per essere dettagliata, trasformala nel file YAML `SPEC-xxx-<title>` descritto sotto e sostituisci la voce del catalogo con un collegamento al file canonico, così da non mantenere la stessa conoscenza duplicata in due punti.
+Un'idea appena individuata può nascere con la sola sintesi, la motivazione, i documenti di origine e `status: proposed`. Espandi lo stesso file sul posto quando diventano noti scope, attività e criteri di accettazione. Non creare mai un secondo documento soltanto perché la specifica diventa più dettagliata.
 
-Crea un file YAML `SPEC-xxx-<title>` per ogni specifica destinata a diventare, prima o poi, una issue GitHub. A differenza degli altri tipi di documento, una specifica è YAML puro, non Markdown con front matter. Campi minimi:
+Quando aggiorni una repository che contiene ancora un catalogo feature legacy, migra ogni voce univoca in un file SPEC proposed, conserva i collegamenti alle fonti originali e rimuovi il catalogo dopo aver verificato che nessuna proposta sia andata persa.
+
+A differenza degli altri tipi di documento, una specifica è YAML puro, non Markdown con front matter. Campi minimi:
 
 ```yaml
 id: SPEC-014
 title: Support multi-backend export
-status: draft           # draft | ready | submitted | closed
+status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
 type: feature            # feature | bug | task | chore
 labels: [backend, export]
 assignees: []
 milestone: null
-body: |
-  ## Problem
-  ...
-  ## Proposal
-  ...
-  ## Acceptance criteria
-  - [ ] ...
+summary: |
+  Descrizione sintetica del lavoro proposto.
+motivation: |
+  Perché vale la pena considerarlo e quali documenti lo hanno originato.
+sources:
+  - ../decisions/ADR-003-multi-backend.md
+body: null               # può essere null per draft/proposed; obbligatorio e completo per ready+
 relations:
   parent: null            # SPEC-xxx, corrisponde al parent sub-issue di GitHub
   children: []             # elenco di SPEC-xxx, corrisponde ai sub-issue di GitHub
@@ -168,6 +170,28 @@ github:
 updated: ...
 ```
 
+Usa gli stati in modo coerente:
+
+* `draft`: il file è in fase di stesura e non è ancora abbastanza coerente per una revisione;
+* `proposed`: il lavoro è una proposta revisionabile, ma non è ancora stato approvato come pronto per l'implementazione;
+* `ready`: la proposta è approvata e scope, attività, dipendenze e criteri di accettazione sono sufficientemente completi per implementarla;
+* `submitted`: la specifica è stata pubblicata come issue GitHub;
+* `closed`: il lavoro è stato completato o comunque chiuso;
+* `rejected`: la proposta è stata valutata e rifiutata;
+* `superseded`: un'altra SPEC ha sostituito questa; indica la sostituta in `relations.related`.
+
+Il passaggio di una SPEC a `ready` richiede sia dettaglio sufficiente sia approvazione esplicita nella richiesta dell'utente o nella documentazione consolidata del progetto. Espandere una SPEC non implica di per sé approvarla: mantienila `proposed` quando è dettagliata ma ancora in attesa di decisione.
+
+Mantieni un solo `specs-index` nel percorso definito dal backend configurato. È una proiezione di navigazione, non un'altra fonte del contenuto delle specifiche. Raggruppa ogni SPEC una sola volta sotto:
+
+* **Proposte**: `draft`, `proposed`;
+* **Pronte**: `ready`;
+* **Pubblicate**: `submitted`;
+* **Chiuse**: `closed`;
+* **Archiviate**: `rejected`, `superseded`.
+
+Ogni voce contiene soltanto l'id della SPEC collegato al documento canonico, titolo, tipo, stato e data di aggiornamento. Non copiare mai nell'indice sintesi, motivazione, body, attività o criteri di accettazione. Crea l'indice insieme alla prima SPEC e aggiornalo ogni volta che una SPEC viene creata, rinominata, cambia stato o viene rimossa. L'`index` generale della memoria collega `specs-index`; non elenca le singole SPEC.
+
 Fai riferimento alle altre specifiche in `relations` tramite il loro `id`, così i collegamenti restano validi prima che esista una issue. Risolvili in numeri di issue reali solo al momento della pubblicazione, leggendo il `github.issue` di ciascuna specifica referenziata.
 
 Pubblicare una specifica come issue GitHub (o aggiornarne una già pubblicata) **non è mai automatico**: fallo solo su richiesta esplicita, e solo per specifiche con `status: ready`. Quando pubblichi:
@@ -175,10 +199,29 @@ Pubblicare una specifica come issue GitHub (o aggiornarne una già pubblicata) *
 1. risolvi `relations.parent`, `relations.children` e `relations.related` rispetto al `github.issue` delle specifiche referenziate; segnala quelli ancora irrisolti invece di indovinare;
 2. crea o aggiorna la issue con `title`, `body`, `labels`, `assignees`, `milestone`;
 3. imposta la relazione parent/children tramite la funzionalità nativa dei sub-issue di GitHub; rendi `related` come elenco di riferimenti incrociati nel corpo della issue, dato che GitHub non ha un tipo di collegamento non gerarchico nativo;
-4. scrivi `github.issue` e `github.synced_at` nel file YAML, e porta `status` a `submitted`;
+4. scrivi `github.issue` e `github.synced_at` nel file YAML, porta `status` a `submitted` e sposta la relativa voce in Pubblicate nello `specs-index`;
 5. verifica l'esito reale rileggendo la issue tramite il connector o l'API, e riporta quali issue sono state create o aggiornate, con i relativi link.
 
 Questo passo di pubblicazione è un'azione reale e visibile ad altri: non rientra negli aggiornamenti automatici della documentazione descritti in [Limiti](#limiti); trattalo come qualsiasi altra azione visibile ad altri.
+
+## Implementazione delle specifiche
+
+L'implementazione di codice a partire dalle SPEC non è mai automatica. Iniziala soltanto su richiesta esplicita e soltanto da SPEC `ready`. Mantieni l'implementazione separata dal flusso di revisione della memoria persistente: il backend configurato definisce come gestire branch di codice, pull request e merge.
+
+Per una richiesta che comprende più SPEC, usa un modello orchestratore/worker:
+
+1. risolvi le SPEC selezionate dallo `specs-index` e dai relativi file canonici;
+2. verifica che ogni SPEC selezionata sia `ready`, che tutti i prerequisiti referenziati esistano e che l'ordine di esecuzione rispetti le dipendenze;
+3. processale in sequenza, salvo richiesta esplicita di lavoro parallelo e disponibilità nella repository di worktree isolati e percorsi di integrazione non sovrapposti;
+4. avvia un worker di implementazione nuovo e isolato per ogni SPEC; l'orchestratore coordina ma non scrive mai direttamente il codice implementativo;
+5. passa al worker una sola SPEC, il relativo contesto di origine, il branch target e la policy di integrazione richiesta;
+6. imponi al worker di implementare, testare, committare e verificare quella SPEC senza introdurre silenziosamente decisioni assenti dalla specifica;
+7. verifica indipendentemente branch, commit, test ed esito dell'integrazione riportati dal worker prima di avviare la SPEC successiva;
+8. ferma il treno alla prima decisione irrisolta, verifica non riparabile o integrazione incompleta, salvo autorizzazione esplicita dell'utente a saltare quella SPEC.
+
+Ogni invocazione del worker deve partire con un contesto nuovo. Non riutilizzare mai lo stesso worker di implementazione per più SPEC e non ripiegare sull'implementazione inline quando è richiesta la delega isolata ma non è disponibile.
+
+La policy di integrazione predefinita è `pull-request`: branch dedicato più pull request senza merge automatico. `direct-merge` in un branch target condiviso è consentito soltanto quando la richiesta corrente dell'utente lo autorizza esplicitamente. Non eliminare modifiche locali estranee, non sovrascrivere il branch di un altro worker e non considerare il successo di un comando come prova: rileggi lo stato risultante della repository e dell'hosting.
 
 ## Consultazione
 

@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.6.0 -->
+<!-- repodoc:version 1.9.0 -->
 
 # Persistent memory protocol
 
@@ -58,10 +58,10 @@ Adapt document types to what already exists. Do not create unnecessary documents
 * `REQ-xxx-<title>`: requirements;
 * `OPEN-xxx-<title>`: open questions;
 * `ADR-xxx-<title>`: decisions;
-* `SPEC-xxx-<title>`: specifications (one YAML file per spec, see [Specifications](#specifications));
-* `specs-catalog`: a synthesized catalog of high-level specs not yet formalized as `SPEC-xxx-<title>`; it lives **always and only** in the path the configured backend assigns to this type (never inside `knowledge`, `research`, or anywhere else) — see [Specifications](#specifications);
+* `SPEC-xxx-<title>`: specifications, including proposed work (one YAML file per spec, see [Specifications](#specifications));
+* `specs-index`: the navigational index of every SPEC, grouped by lifecycle status;
 * `research`: research;
-* `knowledge`: stable, consolidated knowledge — not a list of future work or not-yet-formalized specs: that belongs exclusively to `specs-catalog`.
+* `knowledge`: stable, consolidated knowledge — not proposed or planned work, which belongs in `SPEC-xxx-<title>` files.
 
 Create these documents only when needed. The concrete location of each type (file path, folder, or page) depends on the configured backend: see [Memory backend](#memory-backend).
 
@@ -128,27 +128,29 @@ When a question is resolved, update `Status` to `resolved`. If the resolution is
 
 ## Specifications
 
-The `specs-catalog` must be written **exclusively** to the path the configured backend assigns to this type (see [Memory backend](#memory-backend)). Do not create it, move it, or duplicate it elsewhere — not even inside `knowledge` — even when the content reads like a roadmap or general knowledge.
+Create a `SPEC-xxx-<title>` YAML file as soon as proposed work is worth tracking. Do not keep preliminary specs in a separate feature list or catalog: the same file evolves from proposal to implementation-ready specification, preserving one identifier and one source of truth throughout its lifecycle.
 
-Specifications often start as synthesized entries in the `specs-catalog`: a bullet list of high-level proposals not yet formalized, typically produced when a situation (an open point, a decision, a requirement) closes and future work worth tracking emerges. Each entry carries a provisional `SPEC-xxx` identifier, a short title, a one-line summary, and a link to the source documents. When a catalog entry is ready to be detailed, turn it into the `SPEC-xxx-<title>` YAML file described below and replace the catalog entry with a link to the canonical file, so the same knowledge is not kept duplicated in two places.
+A newly identified idea may start with only a summary, motivation, source documents, and `status: proposed`. Expand that same file in place as scope, tasks, and acceptance criteria become known. Never create a second document merely because the specification becomes more detailed.
 
-Create a `SPEC-xxx-<title>` YAML file for every specification meant to eventually become a GitHub issue. Unlike other document types, a spec is plain YAML, not Markdown with front matter. Minimum fields:
+When upgrading a repository that still has a legacy feature catalog, migrate every unique entry to a proposed SPEC file, preserve its original source links, and remove the catalog after verifying that no proposal was lost.
+
+Unlike other document types, a spec is plain YAML, not Markdown with front matter. Minimum fields:
 
 ```yaml
 id: SPEC-014
 title: Support multi-backend export
-status: draft           # draft | ready | submitted | closed
+status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
 type: feature            # feature | bug | task | chore
 labels: [backend, export]
 assignees: []
 milestone: null
-body: |
-  ## Problem
-  ...
-  ## Proposal
-  ...
-  ## Acceptance criteria
-  - [ ] ...
+summary: |
+  High-level description of the proposed work.
+motivation: |
+  Why the work is worth considering and which source documents led to it.
+sources:
+  - ../decisions/ADR-003-multi-backend.md
+body: null               # may be null for draft/proposed; required and complete for ready+
 relations:
   parent: null            # SPEC-xxx, maps to a GitHub sub-issue parent
   children: []             # SPEC-xxx list, maps to GitHub sub-issues
@@ -159,6 +161,28 @@ github:
 updated: ...
 ```
 
+Use statuses consistently:
+
+* `draft`: the file is being authored and is not yet coherent enough for review;
+* `proposed`: the work is a reviewable proposal but has not yet been approved as implementation-ready;
+* `ready`: the proposal is approved and the scope, tasks, dependencies, and acceptance criteria are complete enough to implement;
+* `submitted`: the spec has been published as a GitHub issue;
+* `closed`: the work has been completed or otherwise closed;
+* `rejected`: the proposal was considered and declined;
+* `superseded`: another SPEC replaced this one; reference the replacement in `relations.related`.
+
+Moving a SPEC to `ready` requires both sufficient detail and explicit approval in the user request or consolidated project documentation. Expanding a SPEC does not by itself imply approval; keep it `proposed` when it is detailed but still awaiting a decision.
+
+Maintain one `specs-index` at the path defined by the configured backend. It is a navigational projection, not another source of specification content. Group every SPEC exactly once under:
+
+* **Proposals**: `draft`, `proposed`;
+* **Ready**: `ready`;
+* **Published**: `submitted`;
+* **Closed**: `closed`;
+* **Archived**: `rejected`, `superseded`.
+
+Each entry contains only the SPEC id linked to its canonical document, title, type, status, and updated date. Never copy summary, motivation, body, tasks, or acceptance criteria into the index. Create the index with the first SPEC and update it whenever a SPEC is created, renamed, changes status, or is removed. The general memory `index` links to `specs-index`; it does not enumerate individual SPECs.
+
 Reference other specs in `relations` by their `id`, so links stay valid before any issue exists. Resolve them to real issue numbers only when publishing, by looking up each referenced spec's `github.issue`.
 
 Publishing a spec as a GitHub issue (or updating one already published) is **never automatic**: do it only on explicit request, and only for specs with `status: ready`. When publishing:
@@ -166,10 +190,29 @@ Publishing a spec as a GitHub issue (or updating one already published) is **nev
 1. resolve `relations.parent`, `relations.children`, and `relations.related` against the `github.issue` of the referenced specs; flag any still unresolved instead of guessing;
 2. create or update the issue with `title`, `body`, `labels`, `assignees`, `milestone`;
 3. set the parent/children relationship through GitHub's native sub-issues feature; render `related` as a cross-reference list inside the issue body, since GitHub has no native non-hierarchical link type;
-4. write the resulting `github.issue` and `github.synced_at` back into the YAML file, and move `status` to `submitted`;
+4. write the resulting `github.issue` and `github.synced_at` back into the YAML file, move `status` to `submitted`, and move its entry to Published in `specs-index`;
 5. verify the real outcome by rereading the issue through the connector or API, and report which issues were created or updated, with links.
 
 This publishing step is a real, externally visible action — it is not covered by the automatic documentation updates in [Limits](#limits); treat it like any other action visible to others.
+
+## Implementing specifications
+
+Implementing code from SPECs is never automatic. Start only on explicit request and only from `ready` SPECs. Keep implementation separate from the persistent-memory review flow: the configured backend defines how code branches, pull requests, and merges are handled.
+
+For a request covering multiple SPECs, use an orchestrator/worker model:
+
+1. resolve the selected SPECs from `specs-index` and their canonical files;
+2. validate that every selected SPEC is `ready`, all referenced prerequisites exist, and the execution order respects their dependencies;
+3. process them sequentially unless the user explicitly requests parallel work and the repository can provide isolated worktrees and non-overlapping integration paths;
+4. launch a fresh isolated implementation worker for each SPEC; the orchestrator coordinates but never writes implementation code itself;
+5. give the worker only one SPEC, its relevant source context, the target branch, and the requested integration policy;
+6. require the worker to implement, test, commit, and verify that SPEC without silently introducing decisions absent from the specification;
+7. independently verify the worker's reported branch, commits, tests, and integration result before starting the next SPEC;
+8. stop the train on the first unresolved decision, unrepairable verification failure, or incomplete integration, unless the user explicitly authorizes skipping that SPEC.
+
+Every worker invocation must start with a fresh context. Never reuse one implementation worker across multiple SPECs and never fall back to inline implementation when isolated delegation is required but unavailable.
+
+The default integration policy is `pull-request`: a dedicated branch plus pull request with no automatic merge. `direct-merge` into a shared target branch is allowed only when the current user request explicitly authorizes it. Never discard unrelated local changes, overwrite another worker's branch, or treat command success as proof: reread the resulting repository and hosting state.
 
 ## Consultation order
 

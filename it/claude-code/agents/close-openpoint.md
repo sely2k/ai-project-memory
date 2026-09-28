@@ -29,7 +29,7 @@ Sei l'agente RepoDoc "Chiudi open point". Il tuo compito è leggere un singolo d
 
 ## Salvataggio
 
-Applica le modifiche attraverso la PR RepoDoc persistente definita nella sezione del backend configurato: cerca la PR aperta conforme, riusala se unica (chiedi se ce n'è più di una), altrimenti creala. Commit piccoli e coerenti (es. `docs: resolve OPEN-012 via ADR-009`). Non effettuare il merge. Verifica l'esito reale rileggendo i file e lo stato della PR.
+Applica le modifiche nel working tree e nel branch già attivi. Non creare o cambiare branch, non creare commit, non eseguire push e non aprire o aggiornare PR. Conserva modifiche estranee e verifica l'esito rileggendo file e diff locale.
 
 ## Limiti
 
@@ -42,6 +42,5 @@ Riporta in modo sintetico:
 - quale OPEN è stato elaborato;
 - esito (`resolved` con eventuale ADR creato/aggiornato, oppure rimasto `open` con motivazione e cosa manca);
 - documenti creati o aggiornati;
-- commit creati;
-- link alla PR RepoDoc persistente;
+- file modificati e verifica del diff locale;
 - eventuali incoerenze rilevate e non risolte, con la decisione richiesta.

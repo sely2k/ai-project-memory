@@ -17,9 +17,9 @@ Task:
 4. Update the links and indexes involved.
 5. Before saving, verify the update does not contradict other established documentation; if it does, flag it explicitly and ask how to resolve it instead of saving anyway.
 
-Apply the changes through the persistent RepoDoc PR defined in the configured backend's section: look for the matching open PR, reuse it if there is exactly one (ask if there is more than one), otherwise create it. Small, coherent commits. Do not merge. Verify the real outcome by rereading the files and the PR state.
+Apply changes in the existing working tree and active branch. Do not create or switch branches, create commits, push, or open or update PRs. Preserve unrelated changes and verify files and the local diff.
 
 Do not introduce changes to code, infrastructure, pipelines, dependencies, databases, or configuration to "resolve" the question: if they would be needed, flag them in the report as an action to request explicitly, without making them.
 
-Report: which OPEN was processed; outcome (`resolved` with any ADR, or left `open` with the reason and what is missing); documents created or updated; commits created; link to the PR; any inconsistencies found and left unresolved.
+Report: which OPEN was processed; outcome (`resolved` with any ADR, or left `open` with the reason and what is missing); documents created or updated; local-diff verification; any inconsistencies found and left unresolved.
 """

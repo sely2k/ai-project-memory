@@ -20,11 +20,29 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `OPEN-xxx-<title>` | `repodoc/openpoint/OPEN-xxx-<title>.md` |
 | `ADR-xxx-<title>` | `repodoc/decisions/ADR-xxx-<title>.md` |
 | `SPEC-xxx-<title>` | `repodoc/specs/SPEC-xxx-<title>.yaml` |
-| `specs-catalog` | `repodoc/specs/features.md` |
+| `specs-index` | `repodoc/specs/index.md` |
 | `research` | `repodoc/research/` |
 | `knowledge` | `repodoc/knowledge/` |
 
-Il catalogo delle specifiche di alto livello va **sempre e soltanto** in `repodoc/specs/features.md`: non crearlo, spostarlo o duplicarlo in `repodoc/knowledge/` o altrove, anche se il contenuto sembra una roadmap o conoscenza generale.
+Le specifiche proposte e quelle completamente dettagliate usano gli stessi file `repodoc/specs/SPEC-xxx-<title>.yaml`. Non creare un catalogo feature separato: usa `status: proposed` per il lavoro in attesa di approvazione e arricchisci lo stesso file mentre matura.
+
+`repodoc/specs/index.md` raggruppa i collegamenti a tutti i file SPEC per stato del ciclo di vita, usando le sezioni definite dal protocollo di base. Contiene soltanto metadati di navigazione e va aggiornato atomicamente con ogni creazione o cambio di stato di una SPEC. `repodoc/index.md` collega questo indice specializzato invece di elencare le singole SPEC.
+
+Usa questa struttura, omettendo le righe delle tabelle quando una sezione è vuota ma mantenendo tutte le intestazioni:
+
+```markdown
+# Specifiche
+
+## Proposte
+| SPEC | Titolo | Tipo | Stato | Aggiornata |
+|---|---|---|---|---|
+| [SPEC-014](./SPEC-014-support-multi-backend-export.yaml) | Support multi-backend export | feature | proposed | 2026-09-28 |
+
+## Pronte
+## Pubblicate
+## Chiuse
+## Archiviate
+```
 
 ### Collegamenti
 
@@ -46,9 +64,16 @@ tag: [...]
 
 I file `SPEC-xxx-<title>` sono YAML puro, non Markdown con front matter: vedi [Specifiche](../memory-protocol-core.md#specifiche) nel protocollo di base per lo schema.
 
-### Pull Request persistente
+### Modalità di scrittura
 
-**Non modificare direttamente il branch principale.**
+Determina la modalità dall'ambiente che ha originato il lavoro, non dal nome dell'agente eventualmente delegato:
+
+- **CLI locale** (Claude Code, Codex CLI, Copilot CLI o equivalente avviato dall'utente nella repository): modifica i file nel working tree e nel branch già attivi. Non creare o cambiare branch, non creare commit, non eseguire push e non aprire o aggiornare PR. Conserva tutte le modifiche estranee e verifica il risultato rileggendo file e diff locale. Lascia all'utente staging, commit e integrazione.
+- **Chat remota** (ChatGPT Project, Claude Project o un'attività delegata da quella chat): usa la Pull Request RepoDoc persistente descritta di seguito. Una delega da chat a Codex resta in modalità chat e non diventa modalità CLI.
+
+### Pull Request persistente per la chat
+
+In modalità chat, **non modificare direttamente il branch principale.**
 
 Titolo valido della PR (numero GitHub, senza zeri iniziali):
 
@@ -76,9 +101,9 @@ Mantieni e riutilizza la stessa PR per gli aggiornamenti successivi, finché res
 
 **Non effettuare autonomamente il merge della PR.**
 
-### Commit
+### Commit della chat
 
-Crea commit piccoli e coerenti per concetto, per esempio:
+In modalità chat, crea commit piccoli e coerenti per concetto, per esempio:
 
 ```text
 docs: record authentication decision
@@ -92,17 +117,34 @@ Solo su richiesta esplicita, per un file `SPEC-xxx-<title>` con `status: ready`:
 2. Risolvi `relations.parent`, `relations.children` e `relations.related` leggendo il `github.issue` di ciascuna specifica referenziata.
 3. Crea la issue (`gh issue create --title ... --body-file ... --label ... --assignee ... --milestone ...`), oppure aggiornala con `gh issue edit` se `github.issue` è già valorizzato.
 4. Imposta la relazione parent/children tramite la funzionalità nativa dei sub-issue di GitHub; rendi `relations.related` come elenco `Related: #...` nel corpo della issue, dato che GitHub non ha un tipo di collegamento non gerarchico nativo.
-5. Scrivi `github.issue` e `github.synced_at` nel file YAML e porta `status` a `submitted`.
+5. Scrivi `github.issue` e `github.synced_at` nel file YAML, porta `status` a `submitted` e sposta la voce della SPEC in Pubblicate dentro `repodoc/specs/index.md` nella stessa operazione. In modalità chat includi tutto nello stesso commit della PR persistente; in modalità CLI lascia gli aggiornamenti nel working tree senza creare commit.
 6. Verifica l'esito reale rileggendo la issue tramite il connector o l'API, e riporta i link delle issue create o aggiornate.
+
+### Implementare le SPEC come codice
+
+Usa le convenzioni di contribuzione documentate dalla repository quando esistono. Altrimenti:
+
+- risolvi il branch target dalla richiesta dell'utente; se non è indicato, usa il branch predefinito della repository;
+- crea `feature/<spec-id-minuscolo>-<slug-titolo>` per ogni SPEC, per esempio `feature/spec-005-titolo-breve`;
+- preferisci un git worktree isolato per non interferire con il checkout corrente dell'utente e con modifiche estranee;
+- in modalità `pull-request`, esegui il push del branch e apri una PR verso il branch target, senza eseguire il merge;
+- in modalità `direct-merge`, procedi soltanto quando la richiesta corrente autorizza esplicitamente il merge diretto, quindi integra e pubblica il branch target secondo le convenzioni della repository;
+- elimina branch locali o remoti soltanto quando le convenzioni della repository o l'utente richiedono esplicitamente la pulizia, e soltanto dopo aver verificato l'integrazione riuscita.
+
+La PR RepoDoc persistente non è la PR di implementazione e non va mai usata come branch di codice.
 
 ### Agenti RepoDoc
 
 Per questo backend, l'installer può copiare agenti dedicati che eseguono parti di questo protocollo in autonomia, ciascuno nel formato nativo dello strumento selezionato (Claude Code, Codex, GitHub Copilot):
 
+- **Bootstrap** (`repodoc-bootstrap`): legge la repository, raccoglie una alla volta soltanto le informazioni essenziali mancanti e crea la memoria iniziale minima nella modalità di scrittura attiva.
+- **Doctor** (`repodoc-doctor`): diagnostica in sola lettura installazione, wrapper, agenti, placeholder, link, indici e struttura delle SPEC, senza modifiche né controllo di aggiornamenti.
 - **Verifica coerenza** (`repodoc-consistency-check`): audita l'intero backend di memoria alla ricerca di contraddizioni, link rotti, duplicazioni e stati non aggiornati.
 - **Chiudi open point** (`repodoc-close-openpoint`): legge un `OPEN-xxx-<title>` e prova a risolverlo raccogliendo evidenze.
-- **Sintetizza specifiche** (`repodoc-synthesize-specs`): a situazione chiusa, registra lavoro futuro come voci di alto livello in `repodoc/specs/features.md`.
-- **Espandi specifica** (skill `repodoc-spec-expand`): trasforma una singola voce del catalogo in un file `SPEC-xxx-<title>.yaml` completo, su richiesta puntuale dell'utente.
-- **Espandi tutte le specifiche** (`repodoc-expand-specs`): scorre il catalogo `repodoc/specs/features.md` voce per voce e la formalizza in un file `SPEC-xxx-<title>.yaml` completo. Su Claude Code delega ogni singola espansione al sotto-agente `repodoc-expand-spec-worker` (invocato tramite lo strumento Task, mai in parallelo, sullo stesso branch della PR persistente); su Codex e Copilot, che non offrono un meccanismo per invocare sotto-agenti isolati, applica la stessa procedura in linea, una voce alla volta.
+- **Sintetizza specifiche** (`repodoc-synthesize-specs`): a situazione chiusa, registra il lavoro futuro direttamente come file `SPEC-xxx-<title>.yaml` minimi con `status: proposed`.
+- **Espandi specifica** (skill `repodoc-spec-expand`): arricchisce sul posto una SPEC draft o proposed esistente, su richiesta puntuale dell'utente.
+- **Espandi tutte le specifiche** (`repodoc-expand-specs`): scorre i file `SPEC-xxx-<title>.yaml` draft e proposed e arricchisce ciascuno sul posto. Il template Claude Code delega ogni espansione a `repodoc-expand-spec-worker`; i template Codex e Copilot applicano attualmente la stessa procedura in linea, un file alla volta.
+- **Implementa SPEC** (`repodoc-implement-specs`): orchestra un treno sequenziale di implementazione e avvia un nuovo `repodoc-implement-spec-worker` per ogni SPEC ready. Non scrive mai direttamente codice implementativo.
+- **Worker implementazione SPEC** (`repodoc-implement-spec-worker`): implementa esattamente una SPEC assegnata sul relativo branch di codice, esegue le verifiche e la integra soltanto secondo la policy richiesta. È un worker interno e non va riutilizzato tra SPEC diverse.
 
-Tutti seguono il flusso di "Pull Request persistente" descritto sopra e per questo sono installati solo per il backend GitHub.
+Gli agenti che modificano la memoria e la skill di espansione seguono la modalità CLI o chat definita sopra; `repodoc-doctor` resta sempre read-only. Gli agenti di implementazione seguono il flusso separato su branch di codice dedicati.

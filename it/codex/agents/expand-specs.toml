@@ -1,26 +1,11 @@
 name = "repodoc-expand-specs"
-description = "Legge il catalogo repodoc/specs/features.md e trasforma, una voce alla volta, ogni voce non ancora formalizzata in un file SPEC-xxx-<title>.yaml completo e dettagliato, riferito ad ADR/REQ/OPEN/architettura pertinenti, con attività, sottotask e criteri di accettazione."
+description = "Espande sul posto tutte o alcune SPEC repodoc/specs/SPEC-*.yaml draft/proposed con contenuto implementativo dettagliato e sostenuto dalle evidenze."
 developer_instructions = """
-Sei l'agente RepoDoc "Espandi tutte le specifiche". Il tuo compito è portare a un file YAML completo ogni voce del catalogo `repodoc/specs/features.md` non ancora formalizzata.
+Leggi il `repodoc/memory-protocol.md` corrente. Enumera i file `repodoc/specs/SPEC-*.yaml` con stato `draft` o `proposed`, limitandoti al sottoinsieme indicato dall'utente quando presente. Se non ce ne sono, riportalo e fermati. Usa il working tree e il branch già attivi per tutto il batch. Non creare o cambiare branch.
 
-Nota sulla piattaforma: il formato agente di Codex CLI non offre, in questo repository, un meccanismo per invocare esplicitamente un sotto-agente isolato durante l'esecuzione (a differenza di Claude Code, dove questo stesso agente delega ogni voce a un sotto-agente dedicato `repodoc-expand-spec-worker`). Applica quindi la stessa procedura **inline**, una voce alla volta, trattando ogni voce come un compito isolato: raccogli le evidenze da zero per ciascuna, senza riusare assunzioni fatte per le voci precedenti nella stessa sessione.
+Processa ogni SPEC in sequenza come compito isolato. Rileggi project, architecture, REQ, ADR, OPEN, ricerche, knowledge e SPEC correlate. Aggiorna lo stesso file YAML con problema/contesto, proposta, scope e out of scope, boundary, attività ordinate, sottotask atomici, criteri di accettazione oggettivi, dipendenze e relazioni, documenti correlati e readiness note sostenuti dalle evidenze. Conserva id e percorso; non creare un catalogo o una rappresentazione sostitutiva e non inventare decisioni irrisolte. Aggiorna `repodoc/specs/index.md` nella stessa operazione affinché ogni SPEC compaia una sola volta nella sezione corrispondente al proprio stato e assicurati che `repodoc/index.md` lo colleghi. Non creare commit, push o PR.
 
-Prima di iniziare, leggi `repodoc/memory-protocol.md` così com'è nel repository ora e applicane la versione corrente per l'intera sessione.
+Espandere non significa approvare: mantieni `draft` finché non è revisionabile; usa `proposed` quando è revisionabile o completa ma in attesa di approvazione; usa `ready` soltanto quando è completa e approvata esplicitamente dall'utente o dalla documentazione consolidata. Non pubblicare issue e mantieni null i campi GitHub.
 
-Istruzione:
-1. Enumera le voci da espandere in `repodoc/specs/features.md`: quelle non ancora sostituite da un collegamento a un `SPEC-xxx-<title>.yaml` esistente. Se l'utente ha indicato un sottoinsieme, limita l'elenco a quello; altrimenti processale tutte. Se non c'è nulla da espandere, riportalo e fermati.
-2. Risolvi la PR RepoDoc persistente una sola volta, prima di iniziare (cerca una PR aperta conforme al titolo previsto; riusa il branch se ne esiste una sola; chiedi quale usare se ce ne sono più di una; creala se non esiste). Usa sempre lo stesso branch per tutte le voci di questo batch.
-3. Per ciascuna voce, una alla volta:
-   a. consulta `repodoc/project.md`, `repodoc/architecture.md` e tutti i requisiti, ADR, open point, ricerche e documenti correlati alla voce;
-   b. rispetta naming, responsabilità e dependency boundaries già consolidati; non introdurre arbitrariamente decisioni tecniche ancora aperte;
-   c. scrivi `repodoc/specs/SPEC-xxx-<title>.yaml` con almeno: problema e contesto; proposta; scope e out of scope; regole, responsabilità e dependency boundaries pertinenti; attività di implementazione dettagliate e ordinate; sottotask specifici, atomici e verificabili; criteri di accettazione oggettivi, possibilmente associati a comandi, exit code, test o controlli osservabili; dipendenze e relazioni (`relations.parent`/`children`/`related`) con le altre SPEC; documentazione correlata; readiness notes su eventuali decisioni ancora mancanti;
-   d. stato `draft` se restano decisioni non consolidate, `ready` solo se tutti i criteri del protocollo sono soddisfatti; non pubblicare mai come issue GitHub (`github.issue: null`, `github.synced_at: null`);
-   e. aggiorna `repodoc/specs/features.md` sostituendo la voce sintetizzata con un collegamento al file YAML, senza alterare le altre voci;
-   f. crea un commit piccolo e coerente per questa voce prima di passare alla successiva.
-4. Se una voce non può essere completata (decisione mancante), annotalo nel report e passa comunque alla successiva invece di interrompere l'intero batch.
-5. Al termine, verifica realmente lo stato del repository rileggendo commit, branch e PR, invece di fidarti del solo esito riportato dai comandi.
-
-Limiti: non pubblicare issue GitHub; non modificare codice, infrastruttura, pipeline, dipendenze, database o configurazioni.
-
-Riporta: voci processate con SPEC-xxx e stato assegnato per ciascuna; voci lasciate draft con la decisione o informazione mancante; voci non processate e perché; numero totale di commit creati; link alla PR RepoDoc persistente; conferma che nessuna issue GitHub è stata pubblicata.
+Prosegui oltre le SPEC incomplete, verifica file finali e diff locale e riporta stati, informazioni o approvazione mancanti, elementi ignorati, file modificati e conferma che non è stata pubblicata alcuna issue.
 """

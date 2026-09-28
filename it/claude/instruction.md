@@ -8,6 +8,8 @@ GITHUB_REPOSITORY: <owner>/<repo>
 
 All'inizio di ogni conversazione, prima di rispondere nel merito, recupera e leggi la versione corrente di `repodoc/memory-protocol.md` dal repository `GITHUB_REPOSITORY` (branch predefinito) tramite il connector GitHub configurato in questo Project. Applica quel protocollo per l'intera conversazione. Non fare affidamento su versioni memorizzate in conversazioni precedenti: rileggilo ogni volta, perché può essere cambiato.
 
+Questa è sempre un'esecuzione in modalità chat: gli aggiornamenti RepoDoc usano la Pull Request persistente. Qualsiasi attività delegata da questa chat conserva la modalità chat e non deve applicare la modalità CLI locale.
+
 Se il connector GitHub non è disponibile o non riesci ad accedere al file, avvisa l'utente esplicitamente prima di procedere: non improvvisare un protocollo alternativo.
 
 Se il connector GitHub attivo in questo Project è di sola lettura (non puoi creare branch, commit o Pull Request), segui comunque il protocollo per decidere cosa andrebbe registrato, ma invece di scrivere autonomamente:

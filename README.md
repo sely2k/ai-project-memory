@@ -2,14 +2,14 @@
 
 AI Project Memory is a bilingual, repository-backed memory protocol for ChatGPT Projects, Claude Projects, Claude Code, OpenAI Codex, and GitHub Copilot.
 
-It gives AI assistants one versioned source of truth for established project knowledge. Conversations remain temporary working memory, while decisions, requirements, research, architecture, open questions, and durable context are consolidated in GitHub through one persistent pull request.
+It gives AI assistants one versioned source of truth for established project knowledge. Conversations remain temporary working memory, while decisions, requirements, research, architecture, open questions, and durable context are consolidated in GitHub. Local CLI tools leave changes in the active working tree; remote chat tools use one persistent pull request.
 
 ## What this repository provides
 
 - Italian and English versions of the memory protocol.
 - Project instructions for ChatGPT and Claude.
 - Repository instruction wrappers for Claude Code, Codex, and GitHub Copilot.
-- RepoDoc agents (GitHub backend only) for Claude Code, Codex, and GitHub Copilot: a consistency-check agent, a close-open-point agent, a synthesize-specs agent, and an expand-all-specs agent (which on Claude Code delegates each spec to a dedicated sub-agent), plus a `repodoc-spec-expand` skill that turns one high-level spec into a full `SPEC-xxx-<title>.yaml` file. See [Installed layout](#installed-layout) and [Using the RepoDoc agents](#using-the-repodoc-agents) below.
+- RepoDoc agents for Claude Code, Codex, and GitHub Copilot: guided project bootstrap, read-only installation diagnostics, consistency, open-point resolution, SPEC synthesis and expansion, plus an implementation orchestrator and isolated implementation worker. Proposed work is created directly as `SPEC-xxx-<title>.yaml` with `status: proposed`; ready SPECs can be implemented sequentially with a fresh worker per SPEC. See [Installed layout](#installed-layout) and [Using the RepoDoc agents](#using-the-repodoc-agents) below.
 - An interactive installer that places each file in the location expected by the selected tools.
 
 The language packages are under [`it/`](it/INSTALLATION.md) and [`en/`](en/INSTALLATION.md). Each `INSTALLATION.md` contains the complete source-to-target file mapping.
@@ -27,13 +27,14 @@ The command downloads the installer directly from the repository through GitHub 
 The installer asks for:
 
 1. Italian or English;
-2. the memory backend — GitHub, Google Docs, or Notion (only one; Google Docs and Notion are currently preview: the installer collects the target folder/page but does not yet write to them);
-3. the backend-specific target: the GitHub repository (detected from `origin` when available; a bare repository name is automatically prefixed with the default owner `sely2k`), the Google Drive folder, or the Notion parent page;
-4. ChatGPT Project, Claude Project, Claude Code, Codex, GitHub Copilot, or any combination through an interactive checkbox menu. ChatGPT Project and Claude Project are only offered when the backend is GitHub.
+2. the GitHub repository used as persistent memory (detected from `origin` when available; a bare repository name is automatically prefixed with the default owner `sely2k`);
+3. ChatGPT Project, Claude Project, Claude Code, Codex, GitHub Copilot, or any combination through an interactive checkbox menu.
 
 Use the arrow keys to navigate, Space to select or deselect a tool, and Enter to confirm. All available tools are selected by default.
 
 It always installs the shared protocol and then the files required by the selected tools. ChatGPT Project and Claude Project instructions are generated as ready-to-paste files with repository placeholders and related setup notes already updated. Existing `AGENTS.md`, `.claude/CLAUDE.md`, and `.github/copilot-instructions.md` files are preserved: the installer adds or updates only a delimited RepoDoc-managed block. For other existing files, choose whether to skip them, overwrite them, or overwrite them and all following files.
+
+After installation, ask the selected assistant to `Initialize RepoDoc for this project` to run the guided `repodoc-bootstrap` flow. Run `repodoc-doctor` whenever you want a read-only diagnosis of the local installation and document structure; it never changes files or checks for available updates.
 
 The source repository and branch are configured near the top of [`install.py`](install.py):
 
@@ -58,18 +59,18 @@ When the templates are available beside `install.py`, the installer reads them l
 
 ## Installed layout
 
-Selecting all tools with the GitHub backend produces:
+Selecting all tools produces:
 
 ```text
 <target-repository>/
 ├── .claude/
 │   ├── CLAUDE.md
-│   ├── agents/                          # repodoc-consistency-check.md, repodoc-close-openpoint.md, repodoc-synthesize-specs.md, repodoc-expand-specs.md, repodoc-expand-spec-worker.md
+│   ├── agents/                          # memory agents plus repodoc-implement-specs.md and repodoc-implement-spec-worker.md
 │   └── skills/repodoc-spec-expand/SKILL.md
-├── .codex/agents/                       # repodoc-consistency-check.toml, repodoc-close-openpoint.toml, repodoc-synthesize-specs.toml, repodoc-expand-specs.toml
+├── .codex/agents/                       # memory agents plus repodoc-implement-specs.toml and repodoc-implement-spec-worker.toml
 ├── .github/
 │   ├── copilot-instructions.md
-│   └── agents/                          # repodoc-consistency-check.agent.md, repodoc-close-openpoint.agent.md, repodoc-synthesize-specs.agent.md, repodoc-expand-specs.agent.md
+│   └── agents/                          # memory agents plus repodoc-implement-specs.agent.md and repodoc-implement-spec-worker.agent.md
 ├── .agents/skills/repodoc-spec-expand/SKILL.md   # shared discovery path for Codex and Copilot CLI
 ├── repodoc/
 │   ├── memory-protocol.md
@@ -80,7 +81,7 @@ Selecting all tools with the GitHub backend produces:
 
 Paste `repodoc/chatgpt-instruction.md` and `repodoc/claude-chat-instruction.md` into the corresponding project settings. These files are installation artifacts for manual use; the applications do not read them directly from the repository. They live under `repodoc/` specifically so Codex CLI, GitHub Copilot, and Claude Code never pick them up as instructions: those tools only read `AGENTS.md`, `.github/copilot-instructions.md`, and `CLAUDE.md`/`.claude/CLAUDE.md` respectively.
 
-The `.claude/agents/`, `.codex/agents/`, `.github/agents/`, and `.agents/skills/` files are installed only for the GitHub backend, since they operate the persistent-PR flow described in [`en/repodoc/backends/github.md`](en/repodoc/backends/github.md#repodoc-agents). Each agent runs in the native format of its tool: Claude Code subagents (`.claude/agents/*.md`), Codex custom agents (`.codex/agents/*.toml`), and Copilot CLI custom agents (`.github/agents/*.agent.md`). The `repodoc-spec-expand` skill is one source file, copied to `.claude/skills/` for Claude Code and to the shared `.agents/skills/` path that both Codex and Copilot CLI discover.
+The `.claude/agents/`, `.codex/agents/`, `.github/agents/`, and `.agents/skills/` files are installed for their selected tools. When invoked locally from a CLI, memory agents edit the active working tree without creating branches, commits, pushes, or PRs. Chat-originated memory work uses the persistent RepoDoc PR. Implementation agents keep their separate dedicated-code-branch policy. Each agent runs in the native format of its tool: Claude Code subagents (`.claude/agents/*.md`), Codex custom agents (`.codex/agents/*.toml`), and Copilot custom agents (`.github/agents/*.agent.md`).
 
 ## Using the RepoDoc agents
 
@@ -88,9 +89,32 @@ Once installed, each agent is just a normal custom agent (or skill) for its tool
 
 | Agent | Run it when... | What it does |
 |---|---|---|
-| `repodoc-consistency-check` | before merging the persistent RepoDoc PR, or after a batch of doc edits | Audits the whole `repodoc/` memory backend for broken links, one-way cross-references, stale statuses, and duplicated sources of truth; fixes unambiguous issues and flags the rest for a decision. |
+| `repodoc-bootstrap` | immediately after installation, or when the project memory is still missing its basic context | Inspects existing repository evidence, asks only for missing context one question at a time, then creates the minimal initial memory using the active write mode. |
+| `repodoc-doctor` | after installation or whenever the local RepoDoc structure may be incomplete or damaged | Checks versions, managed wrappers, agent formats, placeholders, links, indexes, and SPEC structure read-only; it reports remediation without changing anything or looking for updates. |
+| `repodoc-consistency-check` | before integrating RepoDoc changes, or after a batch of doc edits | Audits the whole `repodoc/` memory backend for broken links, one-way cross-references, stale statuses, and duplicated sources of truth; fixes unambiguous issues and flags the rest for a decision. |
 | `repodoc-close-openpoint` | you want to push one specific `OPEN-xxx-<title>` forward | Gathers evidence from linked documents (and, read-only, from the code) and either resolves it — creating or updating an ADR when it is a real decision — or updates it with what is still missing. |
-| `repodoc-synthesize-specs` | right after closing a situation (a resolved OPEN, a new ADR, a completed batch of REQs) | Scans what that closure implies and records any newly visible future work as short entries in the `repodoc/specs/features.md` catalog — no detail yet, just a pointer to expand later. |
-| `repodoc-spec-expand` (skill) | you want to detail **one** specific catalog entry right now | Give it the `SPEC_NUMBER`/`SPEC_TITLE`; it turns that single entry into a complete `SPEC-xxx-<title>.yaml` (problem, proposal, scope, ordered tasks, atomic subtasks, acceptance criteria, relations to other specs), replacing the catalog line with a link to the new file. |
-| `repodoc-expand-specs` | you want to clear out the **whole catalog** (or several entries) in one pass | Resolves the persistent PR branch once, then processes every not-yet-formalized catalog entry, one at a time, producing the same detailed YAML as `repodoc-spec-expand` for each. On Claude Code it hands off each entry to `repodoc-expand-spec-worker`; on Codex and Copilot, which have no sub-agent mechanism to delegate to here, it runs the same steps inline instead, one entry at a time. |
-| `repodoc-expand-spec-worker` (Claude Code only) | never directly | Internal sub-agent that `repodoc-expand-specs` spawns once per catalog entry via the Task tool, so each expansion starts from a clean context and they never run in parallel on the same branch. To expand a single spec by hand, use the `repodoc-spec-expand` skill instead. |
+| `repodoc-synthesize-specs` | right after closing a situation (a resolved OPEN, a new ADR, a completed batch of REQs) | Scans what that closure implies and records newly visible future work directly as minimal `SPEC-xxx-<title>.yaml` proposals with `status: proposed`. |
+| `repodoc-spec-expand` (skill) | you want to detail **one** draft or proposed SPEC | Enriches the existing YAML in place with scope, ordered tasks, atomic subtasks, acceptance criteria, and relations. Expansion does not imply approval. |
+| `repodoc-expand-specs` | you want to expand all or several draft/proposed SPECs in one pass | Processes the selected YAML files sequentially in the active write mode. On Claude Code it hands off each file to `repodoc-expand-spec-worker`; on Codex and Copilot it runs the same steps inline. |
+| `repodoc-expand-spec-worker` (Claude Code only) | never directly | Internal sub-agent that `repodoc-expand-specs` spawns once per SPEC via the Task tool, so each expansion starts from a clean context and they never run in parallel on the same branch. |
+| `repodoc-implement-specs` | you want to implement one or more ready SPECs | Validates and orders the selection, then launches a fresh isolated worker for each SPEC, one at a time. It coordinates and verifies but never writes implementation code. |
+| `repodoc-implement-spec-worker` | never directly | Implements exactly one assigned ready SPEC on a dedicated code branch, runs its acceptance and regression checks, pushes it, and opens a PR or performs an explicitly authorized direct merge. |
+
+The SPEC lifecycle is `draft → proposed → ready → submitted → closed`, with `rejected` and `superseded` as terminal alternatives. A SPEC becomes `ready` only when it is sufficiently detailed and explicitly approved; adding detail alone leaves it `proposed`.
+
+`repodoc/specs/index.md` provides the overview that the old catalog used to provide without duplicating specification content. It lists every SPEC once, grouped into proposals, ready, published, closed, and archived sections; `repodoc/index.md` links to this specialized index.
+
+Implementation defaults to a dedicated branch plus an unmerged pull request. Direct merge is used only when the current request says so explicitly. In either mode, the next SPEC starts only after the previous one is integrated or explicitly skipped.
+
+### Implementing a SPEC train
+
+Invoke `repodoc-implement-specs` with an explicit list or an unambiguous selector. Legacy groups previously expressed as headings in a feature catalog should become a shared SPEC `label` or `milestone`.
+
+```text
+Implement the ready SPECs with label rich-chat-capabilities, in dependency order.
+Target branch: develop.
+Integration mode: direct-merge.
+Use a fresh isolated worker for every SPEC and stop on the first blocker.
+```
+
+Omitting the last two settings uses the repository default branch and `pull-request` mode. The agent reads the canonical SPEC files, so the prompt never needs to copy their titles, paths, tasks, or acceptance criteria.

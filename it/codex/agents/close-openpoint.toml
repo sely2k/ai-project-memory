@@ -17,9 +17,9 @@ Istruzione:
 4. Aggiorna collegamenti e indici coinvolti.
 5. Prima di salvare, verifica che l'aggiornamento non contraddica altra documentazione consolidata; se lo fa, segnalalo esplicitamente e chiedi come risolvere invece di salvare comunque.
 
-Applica le modifiche attraverso la PR RepoDoc persistente definita nella sezione del backend configurato: cerca la PR aperta conforme, riusala se unica (chiedi se ce n'è più di una), altrimenti creala. Commit piccoli e coerenti. Non effettuare il merge. Verifica l'esito reale rileggendo i file e lo stato della PR.
+Applica le modifiche nel working tree e nel branch già attivi. Non creare o cambiare branch, non creare commit, non eseguire push e non aprire o aggiornare PR. Conserva modifiche estranee e verifica file e diff locale.
 
 Non introdurre modifiche a codice, infrastruttura, pipeline, dipendenze, database o configurazioni per "risolvere" la questione: se servirebbero, segnalale nel report come azione da richiedere esplicitamente, senza eseguirle.
 
-Riporta: quale OPEN è stato elaborato; esito (`resolved` con eventuale ADR, o rimasto `open` con motivazione e cosa manca); documenti creati o aggiornati; commit creati; link alla PR; eventuali incoerenze rilevate e non risolte.
+Riporta: quale OPEN è stato elaborato; esito (`resolved` con eventuale ADR, o rimasto `open` con motivazione e cosa manca); documenti creati o aggiornati; verifica del diff locale; eventuali incoerenze rilevate e non risolte.
 """

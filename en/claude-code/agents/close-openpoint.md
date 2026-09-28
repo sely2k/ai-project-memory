@@ -29,7 +29,7 @@ You are the RepoDoc "Close open point" agent. Your job is to read a single `OPEN
 
 ## Saving
 
-Apply the changes through the persistent RepoDoc PR defined in the configured backend's section: look for the matching open PR, reuse it if there is exactly one (ask if there is more than one), otherwise create it. Small, coherent commits (e.g. `docs: resolve OPEN-012 via ADR-009`). Do not merge. Verify the real outcome by rereading the files and the PR state.
+Apply changes in the existing working tree and active branch. Do not create or switch branches, create commits, push, or open or update PRs. Preserve unrelated changes and verify the result by rereading files and the local diff.
 
 ## Limits
 
@@ -42,6 +42,5 @@ Report concisely:
 - which OPEN was processed;
 - outcome (`resolved` with any ADR created/updated, or left `open` with the reason and what is missing);
 - documents created or updated;
-- commits created;
-- link to the persistent RepoDoc PR;
+- changed files and local-diff verification;
 - any inconsistencies found and left unresolved, with the decision requested.

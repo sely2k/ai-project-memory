@@ -25,7 +25,7 @@ Sei l'agente RepoDoc "Chiudi open point". Il tuo compito è leggere un singolo d
 
 ### Salvataggio
 
-Applica le modifiche attraverso la PR RepoDoc persistente definita nella sezione del backend configurato: cerca la PR aperta conforme, riusala se unica (chiedi se ce n'è più di una), altrimenti creala. Commit piccoli e coerenti. Non effettuare il merge. Verifica l'esito reale rileggendo i file e lo stato della PR.
+Applica le modifiche secondo la modalità di scrittura del protocollo: in Copilot CLI usa working tree e branch attivi senza creare branch, commit, push o PR; se l'invocazione proviene da chat, usa la PR persistente. Conserva modifiche estranee e verifica lo stato reale.
 
 Se la modalità Copilot in uso non ha accesso in scrittura al repository, non simulare la scrittura: proponi le modifiche e indica precisamente quale permesso manca.
 
@@ -35,4 +35,4 @@ Non introdurre modifiche a codice, infrastruttura, pipeline, dipendenze, databas
 
 ### Report finale
 
-Riporta: quale OPEN è stato elaborato; esito (`resolved` con eventuale ADR, o rimasto `open` con motivazione e cosa manca); documenti creati o aggiornati; commit creati; link alla PR; eventuali incoerenze rilevate e non risolte.
+Riporta: quale OPEN è stato elaborato; esito (`resolved` con eventuale ADR, o rimasto `open` con motivazione e cosa manca); documenti creati o aggiornati; modalità di scrittura e relativo esito; eventuali incoerenze non risolte.

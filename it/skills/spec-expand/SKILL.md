@@ -1,95 +1,29 @@
 ---
 name: repodoc-spec-expand
-description: Trasforma una singola voce di alto livello del catalogo repodoc/specs/features.md in un file YAML SPEC-xxx-<title>.yaml completo e conforme al protocollo RepoDoc. Usa questa skill quando l'utente chiede di dettagliare, espandere o formalizzare una specifica a partire dal catalogo.
+description: Espande sul posto un file repodoc/specs/SPEC-xxx-<title>.yaml draft o proposed esistente. Usa questa skill quando l'utente chiede di dettagliare, rifinire o formalizzare una SPEC specifica.
 ---
 
-# RepoDoc — Espandi una specifica di alto livello
+# RepoDoc — Espandi una SPEC
 
-## Quando usarla
+## Input richiesto
 
-Quando l'utente chiede di trasformare una voce del catalogo `repodoc/specs/features.md` (tipicamente prodotta dall'agente `repodoc-synthesize-specs`) in una specifica YAML completa, pronta a diventare in futuro una issue GitHub.
+Individua una SPEC esistente dall'id, titolo o percorso indicato dall'utente. Cerca in `repodoc/specs/SPEC-*.yaml` per risolvere un riferimento parziale. Chiedi soltanto se resta ambiguo. Non creare una nuova SPEC tramite questa skill: la creazione delle proposte appartiene a `repodoc-synthesize-specs`.
 
-## Parametri richiesti
+## Istruzioni
 
-- `SPEC_NUMBER`: identificativo della specifica così come appare nel catalogo (es. `SPEC-003`).
-- `SPEC_TITLE`: titolo sintetico della specifica così come appare nel catalogo.
+Leggi il `repodoc/memory-protocol.md` corrente e la SPEC selezionata. Verifica che lo stato sia `draft` o `proposed`, poi consulta `project.md`, `architecture.md` e tutti i REQ, ADR, OPEN, ricerche, SPEC e documenti knowledge correlati.
 
-Se l'utente non fornisce entrambi i valori, chiedili prima di procedere. Se fornisce solo uno dei due (o un riferimento ambiguo), leggi `repodoc/specs/features.md` per dedurre l'altro; se la voce non è univoca, chiedi conferma invece di indovinare.
+Arricchisci lo stesso file YAML con problema/contesto, proposta, scope e out of scope, boundary, attività ordinate, sottotask atomici, criteri di accettazione oggettivi, dipendenze e relazioni, documentazione correlata e readiness note sostenuti dalle evidenze. Conserva id e percorso. Non creare un catalogo feature, un documento sostitutivo o una decisione tecnica non supportata.
 
-## Istruzioni operative
+Aggiorna `repodoc/specs/index.md` nella stessa modifica affinché la SPEC compaia una sola volta nella sezione del ciclo di vita corrispondente allo stato risultante. Assicurati che `repodoc/index.md` colleghi questo indice specializzato.
 
-Esegui, sostituendo `SPEC_NUMBER` e `SPEC_TITLE` con i valori raccolti, il compito seguente:
+Applica esattamente le regole di stato:
 
----
+- mantieni `draft` finché la SPEC non è abbastanza coerente per una revisione;
+- imposta `proposed` quando è revisionabile, anche se completamente dettagliata ma ancora in attesa di approvazione;
+- imposta `ready` soltanto quando sono presenti tutti i dettagli richiesti e l'utente o la documentazione consolidata l'ha approvata esplicitamente;
+- non pubblicare issue; lascia null `github.issue` e `github.synced_at`.
 
-Nel repository `GITHUB_REPOSITORY`, applica la versione corrente di `repodoc/memory-protocol.md`.
+Opera nel working tree e nel branch già attivi. Non creare o cambiare branch, non creare commit, non eseguire push e non aprire o aggiornare PR. Conserva modifiche estranee e verifica file, diff locale e assenza di una issue GitHub.
 
-Trasforma `SPEC_NUMBER` (`SPEC_TITLE`), attualmente sintetizzata in `repodoc/specs/features.md`, in una specifica YAML precisa e completa conforme al protocollo.
-
-Prima di scrivere:
-
-- consulta `repodoc/project.md`, `repodoc/architecture.md` e tutti i requisiti, ADR, open point, ricerche e documenti correlati alla SPEC;
-- verifica lo stato corrente del repository e della PR RepoDoc persistente;
-- rispetta naming, responsabilità e dependency boundaries già consolidati;
-- conserva eventuali naming o refusi intenzionalmente consolidati nei documenti autorevoli;
-- non introdurre arbitrariamente decisioni tecniche che risultano ancora aperte.
-
-La specifica YAML deve includere almeno:
-
-- problema e contesto;
-- proposta;
-- scope e out of scope;
-- regole, responsabilità e dependency boundaries pertinenti;
-- attività di implementazione dettagliate e ordinate;
-- sottotask specifici, atomici e verificabili;
-- criteri di accettazione oggettivi, possibilmente associati a comandi, exit code, test o controlli osservabili;
-- dipendenze e relazioni con le altre SPEC;
-- documentazione correlata;
-- readiness notes che indichino precisamente eventuali decisioni ancora mancanti.
-
-Gestisci lo stato della SPEC in base alle evidenze documentali:
-
-- mantienila `draft` se restano decisioni, prerequisiti o dettagli essenziali non consolidati;
-- impostala `ready` soltanto se tutti i criteri previsti dal protocollo risultano chiaramente soddisfatti;
-- non pubblicarla come GitHub issue;
-- lascia `github.issue: null` e `github.synced_at: null`.
-
-Aggiorna `repodoc/specs/features.md` affinché la vecchia sintesi sia sostituita da un collegamento al nuovo file YAML canonico, eliminando la duplicazione senza alterare le altre SPEC.
-
-Gestisci l'aggiornamento mediante la PR RepoDoc persistente prevista dal protocollo:
-
-1. cerca tutte le PR aperte il cui titolo rispetta esattamente il formato previsto;
-2. se ne esiste una sola, riusa il relativo branch;
-3. se non ne esiste nessuna, crea branch e PR seguendo il protocollo;
-4. se ne esistono più di una, fermati e chiedi all'utente quale utilizzare;
-5. crea commit piccoli e coerenti;
-6. aggiorna la descrizione della PR per includere la nuova SPEC;
-7. non effettuare il merge.
-
-Verifica realmente, rileggendo GitHub dopo le modifiche:
-
-- contenuto e SHA del nuovo file YAML;
-- stato `draft` o `ready`;
-- presenza di attività, sottotask e acceptance criteria;
-- assenza della vecchia duplicazione in `features.md`;
-- presenza del nuovo collegamento nel catalogo;
-- commit presenti sul branch;
-- stato, titolo, branch e contenuto della PR persistente;
-- assenza di una GitHub issue per la SPEC.
-
-Alla fine riporta sinteticamente:
-
-- file creati o modificati;
-- stato assegnato alla SPEC e motivazione;
-- numero di attività e sottotask;
-- commit creati;
-- link alla PR persistente;
-- risultato delle verifiche;
-- conferma che non è stata creata alcuna issue.
-
----
-
-## Note
-
-- Questa skill non pubblica mai issue GitHub: quello resta un passo esplicito e separato, previsto dalla sezione "Specifiche" del protocollo, solo per SPEC con `status: ready` e solo su richiesta esplicita.
-- Se il backend configurato non è GitHub, il flusso di PR persistente descritto sopra non si applica: segui invece il flusso di scrittura del backend configurato descritto in `repodoc/memory-protocol.md`.
+Riporta file modificato, stato risultante e motivazione, numero di attività/sottotask, informazioni o approvazione mancanti ed esito delle verifiche locali.

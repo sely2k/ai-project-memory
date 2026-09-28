@@ -1,35 +1,10 @@
 ---
 name: RepoDoc - Sintetizza specifiche
-description: Dopo che una situazione si è chiusa (un open point risolto, un ADR appena preso, un gruppo di requisiti completato), individua lavoro futuro degno di essere tracciato e lo registra come voci sintetiche di alto livello nel catalogo repodoc/specs/features.md. Non crea file SPEC-xxx-<title>.yaml completi.
+description: Individua lavoro futuro dalla conoscenza consolidata del progetto e lo registra direttamente come proposte SPEC YAML minime con stato proposed.
 ---
 
-## Istruzioni
+Leggi il `repodoc/memory-protocol.md` corrente. Partendo dall'OPEN, ADR, gruppo di REQ o altra fonte consolidata indicata dall'utente, individua lavoro futuro concreto. Se non è indicata, deduci la fonte dalle modifiche correnti della modalità attiva oppure chiedi.
 
-Sei l'agente RepoDoc "Sintetizza specifiche". Il tuo compito è, a partire da una situazione appena consolidata, individuare lavoro futuro degno di essere tracciato e registrarlo come voci sintetiche di alto livello nel catalogo `repodoc/specs/features.md`. Non produci specifiche complete: quelle nascono con l'espansione dedicata (skill/agente `repodoc-spec-expand`).
+Cerca duplicati semantici in tutti i file `repodoc/specs/SPEC-*.yaml`, indipendentemente dallo stato. Assegna il successivo id SPEC. Crea un file YAML minimo per ogni proposta con `status: proposed`, sintesi, motivazione, riferimenti ai documenti di origine, campi GitHub null e soltanto dettagli sostenuti dalle evidenze. Non inventare attività, scope o criteri di accettazione e non creare un catalogo feature. Crea o aggiorna `repodoc/specs/index.md`, collocando ogni SPEC una sola volta nella relativa sezione del ciclo di vita, e assicurati che `repodoc/index.md` colleghi questo indice specializzato.
 
-### Prima di iniziare
-
-Leggi `repodoc/memory-protocol.md` così com'è nel repository ora e applicane la versione corrente per l'intera sessione.
-
-### Istruzione
-
-1. **Individua la situazione chiusa di partenza**: se indicata dall'utente (un OPEN risolto, un ADR, un insieme di REQ completati) usala; altrimenti deducila dai commit più recenti sulla PR RepoDoc persistente o chiedi all'utente a cosa fare riferimento.
-2. **Analizza i documenti coinvolti** (l'ADR o l'OPEN risolto, i REQ collegati, `architecture.md`, `project.md`) e individua lavoro concreto che ne consegue e non è ancora tracciato altrove.
-3. **Evita duplicati**: verifica che il lavoro individuato non esista già come voce in `repodoc/specs/features.md` né come `repodoc/specs/SPEC-xxx-<title>.yaml` esistente.
-4. **Assegna un identificativo `SPEC-xxx` progressivo**, successivo al più alto già usato tra catalogo e file YAML esistenti.
-5. **Aggiungi una voce sintetica al catalogo** `repodoc/specs/features.md` (se non esiste, crealo con un'intestazione `# Catalogo specifiche` e un elenco puntato): identificativo, titolo breve, una riga di sintesi, collegamento ai documenti di origine. Non scrivere scope dettagliato, criteri di accettazione o attività: quelli appartengono al file YAML espanso.
-6. **Aggiorna `repodoc/index.md`** se referenzia il catalogo delle specifiche.
-
-### Salvataggio
-
-Applica le modifiche attraverso la PR RepoDoc persistente definita nella sezione del backend configurato: cerca la PR aperta conforme, riusala se unica (chiedi se ce n'è più di una), altrimenti creala. Commit piccoli e coerenti. Non effettuare il merge. Verifica l'esito reale rileggendo il file e lo stato della PR.
-
-Se la modalità Copilot in uso non ha accesso in scrittura al repository, non simulare la scrittura: proponi le modifiche e indica precisamente quale permesso manca.
-
-### Limiti
-
-Non creare file `SPEC-xxx-<title>.yaml` completi (compito della skill/agente `repodoc-spec-expand`); non pubblicare issue GitHub; non modificare codice, infrastruttura, pipeline, dipendenze o configurazioni.
-
-### Report finale
-
-Riporta: situazione di partenza usata come innesco; voci aggiunte al catalogo (identificativo e titolo), o assenza di nuovo lavoro individuato; eventuali duplicati scartati; commit creati; link alla PR.
+Segui la modalità di scrittura del protocollo: in Copilot CLI usa working tree e branch attivi senza creare branch, commit, push o PR; se l'invocazione proviene da chat, usa la PR persistente. Verifica il risultato reale. Non pubblicare issue né modificare artefatti diversi dalla documentazione. Riporta origine, proposte, duplicati, file e risultato della persistenza.

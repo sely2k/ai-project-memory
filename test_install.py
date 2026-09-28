@@ -80,6 +80,19 @@ class InjectVersionTests(unittest.TestCase):
 
 
 class AgentTemplateTests(unittest.TestCase):
+    def test_github_is_the_only_supported_backend(self):
+        for language in ("it", "en"):
+            protocol = install.compose_protocol(language)
+            self.assertIn("Backend: GitHub", protocol)
+            self.assertNotIn("Backend: Notion", protocol)
+            self.assertNotIn("Backend: Google Docs", protocol)
+
+        self.assertEqual(install.GITHUB_BACKEND, "repodoc/backends/github.md")
+        self.assertFalse((TEMPLATE_ROOT / "it/repodoc/backends/notion.md").exists())
+        self.assertFalse((TEMPLATE_ROOT / "it/repodoc/backends/google-docs.md").exists())
+        self.assertFalse((TEMPLATE_ROOT / "en/repodoc/backends/notion.md").exists())
+        self.assertFalse((TEMPLATE_ROOT / "en/repodoc/backends/google-docs.md").exists())
+
     def test_every_agent_and_skill_source_exists_for_both_languages(self):
         for language in ("it", "en"):
             for files in install.AGENT_FILES.values():
@@ -109,6 +122,162 @@ class AgentTemplateTests(unittest.TestCase):
         for language in ("it", "en"):
             content = (TEMPLATE_ROOT / language / install.SKILL_FILE).read_text(encoding="utf-8")
             self.assertTrue(content.startswith("---\n"))
+
+    def test_spec_workflow_has_no_intermediate_feature_catalog(self):
+        for language in ("it", "en"):
+            sources = {
+                install.SKILL_FILE,
+                "repodoc/memory-protocol-core.md",
+                "repodoc/backends/github.md",
+            }
+            for files in install.AGENT_FILES.values():
+                sources.update(source for source, _ in files)
+
+            for source in sources:
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8")
+                self.assertNotIn("features.md", content, f"legacy catalog reference in {language}/{source}")
+                self.assertNotIn("specs-catalog", content, f"legacy catalog type in {language}/{source}")
+
+    def test_protocol_defines_proposed_spec_lifecycle(self):
+        expected_statuses = ("draft", "proposed", "ready", "submitted", "closed", "rejected", "superseded")
+        for language in ("it", "en"):
+            content = (TEMPLATE_ROOT / language / install.PROTOCOL_CORE).read_text(encoding="utf-8")
+            for status in expected_statuses:
+                self.assertIn(status, content)
+            self.assertIn("summary:", content)
+            self.assertIn("motivation:", content)
+            self.assertIn("sources:", content)
+            self.assertIn("body: null", content)
+
+    def test_spec_index_is_defined_and_maintained_by_spec_agents(self):
+        agent_sources = (
+            "claude-code/agents/consistency-check.md",
+            "claude-code/agents/synthesize-specs.md",
+            "claude-code/agents/expand-specs.md",
+            "claude-code/agents/expand-spec-worker.md",
+            "codex/agents/consistency-check.toml",
+            "codex/agents/synthesize-specs.toml",
+            "codex/agents/expand-specs.toml",
+            "copilot/agents/consistency-check.agent.md",
+            "copilot/agents/synthesize-specs.agent.md",
+            "copilot/agents/expand-specs.agent.md",
+            install.SKILL_FILE,
+        )
+        for language in ("it", "en"):
+            protocol = (TEMPLATE_ROOT / language / install.PROTOCOL_CORE).read_text(encoding="utf-8")
+            github = (TEMPLATE_ROOT / language / "repodoc/backends/github.md").read_text(encoding="utf-8")
+            self.assertIn("specs-index", protocol)
+            self.assertIn("repodoc/specs/index.md", github)
+
+            for source in agent_sources:
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8")
+                self.assertIn("repodoc/specs/index.md", content, f"missing specs index handling in {language}/{source}")
+
+    def test_implementation_agents_use_one_fresh_worker_per_ready_spec(self):
+        pairs = {
+            "claude-code": ("claude-code/agents/implement-specs.md", "claude-code/agents/implement-spec-worker.md"),
+            "codex": ("codex/agents/implement-specs.toml", "codex/agents/implement-spec-worker.toml"),
+            "copilot": ("copilot/agents/implement-specs.agent.md", "copilot/agents/implement-spec-worker.agent.md"),
+        }
+        for language in ("it", "en"):
+            for tool, (orchestrator_source, worker_source) in pairs.items():
+                mapped_sources = {source for source, _ in install.AGENT_FILES[tool]}
+                self.assertIn(orchestrator_source, mapped_sources)
+                self.assertIn(worker_source, mapped_sources)
+
+                orchestrator = (TEMPLATE_ROOT / language / orchestrator_source).read_text(encoding="utf-8")
+                worker = (TEMPLATE_ROOT / language / worker_source).read_text(encoding="utf-8")
+                for required in ("repodoc-implement-spec-worker", "ready", "pull-request", "direct-merge"):
+                    self.assertIn(required, orchestrator)
+                for required in ("SPEC_PATH", "TARGET_BRANCH", "IMPLEMENTATION_BRANCH", "INTEGRATION_MODE"):
+                    self.assertIn(required, worker)
+
+    def test_protocol_requires_isolated_spec_implementation_workers(self):
+        for language in ("it", "en"):
+            protocol = (TEMPLATE_ROOT / language / install.PROTOCOL_CORE).read_text(encoding="utf-8")
+            self.assertIn("direct-merge", protocol)
+            self.assertIn("pull request", protocol.lower())
+            self.assertIn("worker", protocol.lower())
+
+    def test_bootstrap_agents_gather_context_one_question_at_a_time(self):
+        sources = (
+            "claude-code/agents/bootstrap.md",
+            "codex/agents/bootstrap.toml",
+            "copilot/agents/bootstrap.agent.md",
+        )
+        for language in ("it", "en"):
+            for source in sources:
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8").lower()
+                self.assertIn("repodoc/project.md", content)
+                self.assertIn("repodoc/index.md", content)
+                self.assertIn("one question at a time" if language == "en" else "una sola domanda alla volta", content)
+
+    def test_cli_memory_agents_leave_git_integration_to_the_user(self):
+        sources = (
+            "claude-code/agents/bootstrap.md",
+            "claude-code/agents/consistency-check.md",
+            "claude-code/agents/close-openpoint.md",
+            "claude-code/agents/synthesize-specs.md",
+            "claude-code/agents/expand-specs.md",
+            "claude-code/agents/expand-spec-worker.md",
+            "codex/agents/bootstrap.toml",
+            "codex/agents/consistency-check.toml",
+            "codex/agents/close-openpoint.toml",
+            "codex/agents/synthesize-specs.toml",
+            "codex/agents/expand-specs.toml",
+            install.SKILL_FILE,
+        )
+        for language in ("it", "en"):
+            prohibition = "non creare o cambiare branch" if language == "it" else "do not create or switch branches"
+            for source in sources:
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8").lower()
+                self.assertIn("working tree", content, f"missing local working-tree policy in {language}/{source}")
+                self.assertIn(prohibition, content, f"missing branch prohibition in {language}/{source}")
+
+    def test_github_protocol_distinguishes_cli_from_chat(self):
+        for language in ("it", "en"):
+            github = (TEMPLATE_ROOT / language / install.GITHUB_BACKEND).read_text(encoding="utf-8").lower()
+            self.assertIn("local cli" if language == "en" else "cli locale", github)
+            self.assertIn("remote chat" if language == "en" else "chat remota", github)
+            self.assertIn("do not create or switch branches" if language == "en" else "non creare o cambiare branch", github)
+            self.assertIn("persistent" if language == "en" else "persistente", github)
+
+            for source in ("chatgpt/instruction.md", "claude/instruction.md"):
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8").lower()
+                self.assertIn("chat mode" if language == "en" else "modalità chat", content)
+                self.assertIn("persistent" if language == "en" else "persistente", content)
+
+            for source in (
+                "copilot/agents/bootstrap.agent.md",
+                "copilot/agents/consistency-check.agent.md",
+                "copilot/agents/close-openpoint.agent.md",
+                "copilot/agents/synthesize-specs.agent.md",
+                "copilot/agents/expand-specs.agent.md",
+            ):
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8").lower()
+                self.assertIn("copilot cli", content)
+                self.assertIn("chat", content)
+
+    def test_doctor_agents_are_read_only_and_do_not_check_updates(self):
+        sources = (
+            "claude-code/agents/doctor.md",
+            "codex/agents/doctor.toml",
+            "copilot/agents/doctor.agent.md",
+        )
+        for language in ("it", "en"):
+            for source in sources:
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8").lower()
+                self.assertIn("read-only", content)
+                self.assertIn("pass", content)
+                self.assertIn("warn", content)
+                self.assertIn("error", content)
+                self.assertIn("skip", content)
+                self.assertIn("do not check" if language == "en" else "non verificare", content)
+
+            claude_doctor = (TEMPLATE_ROOT / language / sources[0]).read_text(encoding="utf-8")
+            front_matter = claude_doctor.split("---", 2)[1]
+            self.assertNotIn("Edit", front_matter)
+            self.assertNotIn("Write", front_matter)
 
 
 if __name__ == "__main__":
