@@ -16,6 +16,7 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `project` | `repodoc/project.md` |
 | `architecture` | `repodoc/architecture.md` |
 | `glossary` | `repodoc/glossary.md` |
+| `ontology` | `repodoc/ontology.md` |
 | `REQ-xxx-<title>` | `repodoc/requirement/REQ-xxx-<title>.md` |
 | `OPEN-xxx-<title>` | `repodoc/openpoint/OPEN-xxx-<title>.md` |
 | `ADR-xxx-<title>` | `repodoc/decisions/ADR-xxx-<title>.md` |
@@ -26,23 +27,41 @@ GITHUB_REPOSITORY: <owner>/<repo>
 
 Proposed and fully detailed specifications use the same `repodoc/specs/SPEC-xxx-<title>.yaml` files. Do not create a separate feature catalog: use `status: proposed` for work awaiting approval and enrich the same file as it matures.
 
-`repodoc/specs/index.md` groups links to all SPEC files by lifecycle status, using the sections defined by the core protocol. It contains only navigational metadata and must be updated atomically with every SPEC creation or lifecycle change. `repodoc/index.md` links to this specialized index rather than listing individual SPECs.
+`repodoc/specs/index.md` groups links to all SPEC files first by global implementation group and then by scope and order, as defined by the core protocol. It contains only navigation and sequencing metadata and must be updated atomically whenever a SPEC changes. `repodoc/index.md` links to this specialized index rather than listing individual SPECs.
 
-Use this shape, omitting table rows when a section is empty but keeping all section headings:
+Use this shape, creating one heading for every present group in ascending order and always keeping the final Unplanned section:
 
 ```markdown
 # Specifications
 
-## Proposals
-| SPEC | Title | Type | Status | Updated |
-|---|---|---|---|---|
-| [SPEC-014](./SPEC-014-support-multi-backend-export.yaml) | Support multi-backend export | feature | proposed | 2026-09-28 |
+## Group 1
 
-## Ready
-## Published
-## Closed
-## Archived
+### Scope: catalog
+| Order | SPEC | Title | Platform | Type | Status | Updated |
+|---|---|---|---|---|---|---|
+| 1 | [SPEC-014](./SPEC-014-support-multi-backend-export.yaml) | Support multi-backend export | web | feature | ready | 2026-09-28 |
+
+## Group 2
+
+## Unplanned
+
+### Scope: catalog
 ```
+
+`repodoc/ontology.md` contains the canonical multi-platform naming table. Minimum structure:
+
+```markdown
+# Ontology
+
+## Platforms and suffixes
+| Identifier | Name | Suffix | Legacy aliases/prefixes |
+|---|---|---|---|
+| web | Web | web | frontend |
+| ios | iOS | ios | apple-mobile |
+| shared | Shared | shared | common |
+```
+
+A platform-specific project uses `<base-name>-<suffix>`, for example `shop-web` and `shop-ios`. Every SPEC `platform` value must resolve to a row in this table.
 
 ### Links
 
@@ -117,7 +136,7 @@ Only when explicitly requested, for a `SPEC-xxx-<title>` file with `status: read
 2. Resolve `relations.parent`, `relations.children`, and `relations.related` by looking up the `github.issue` of each referenced spec.
 3. Create the issue (`gh issue create --title ... --body-file ... --label ... --assignee ... --milestone ...`), or update it with `gh issue edit` if `github.issue` is already set.
 4. Set the parent/children relationship through GitHub's native sub-issues feature; render `relations.related` as a `Related: #...` list inside the issue body, since GitHub has no native non-hierarchical link type.
-5. Write `github.issue` and `github.synced_at` back into the YAML file, set `status: submitted`, and move the SPEC entry to Published in `repodoc/specs/index.md` in the same operation. In chat mode include everything in one persistent-PR commit; in CLI mode leave the updates in the working tree without creating a commit.
+5. Write `github.issue` and `github.synced_at` back into the YAML file, set `status: submitted`, and update the SPEC entry in its group/scope in `repodoc/specs/index.md` in the same operation. In chat mode include everything in one persistent-PR commit; in CLI mode leave the updates in the working tree without creating a commit.
 6. Verify the real outcome by rereading the issue through the connector or API, and report the created/updated issue links.
 
 ### Implementing specs as code

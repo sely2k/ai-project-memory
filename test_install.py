@@ -173,6 +173,27 @@ class AgentTemplateTests(unittest.TestCase):
                 content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8")
                 self.assertIn("repodoc/specs/index.md", content, f"missing specs index handling in {language}/{source}")
 
+    def test_protocol_defines_scoped_ordered_delivery_and_platform_ontology(self):
+        expectations = {
+            "en": ("scope:", "platform:", "delivery:", "implementation group", "repodoc/ontology.md", "<base-name>-<suffix>"),
+            "it": ("scope:", "platform:", "delivery:", "gruppo di implementazione", "repodoc/ontology.md", "<nome-base>-<suffisso>"),
+        }
+        for language, required in expectations.items():
+            protocol = (TEMPLATE_ROOT / language / install.PROTOCOL_CORE).read_text(encoding="utf-8")
+            github = (TEMPLATE_ROOT / language / "repodoc/backends/github.md").read_text(encoding="utf-8")
+            combined = protocol + github
+            for value in required:
+                self.assertIn(value, combined)
+
+            for source in (
+                "claude-code/agents/implement-specs.md",
+                "codex/agents/implement-specs.toml",
+                "copilot/agents/implement-specs.agent.md",
+            ):
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8")
+                self.assertIn("delivery.order", content)
+                self.assertIn("ontology", content.lower())
+
     def test_implementation_agents_use_one_fresh_worker_per_ready_spec(self):
         pairs = {
             "claude-code": ("claude-code/agents/implement-specs.md", "claude-code/agents/implement-spec-worker.md"),

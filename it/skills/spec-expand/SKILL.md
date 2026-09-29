@@ -11,17 +11,17 @@ Individua una SPEC esistente dall'id, titolo o percorso indicato dall'utente. Ce
 
 ## Istruzioni
 
-Leggi il `repodoc/memory-protocol.md` corrente e la SPEC selezionata. Verifica che lo stato sia `draft` o `proposed`, poi consulta `project.md`, `architecture.md` e tutti i REQ, ADR, OPEN, ricerche, SPEC e documenti knowledge correlati.
+Leggi il `repodoc/memory-protocol.md` corrente e la SPEC selezionata. Verifica che lo stato sia `draft` o `proposed`, poi consulta `project.md`, `architecture.md`, `ontology.md` e tutti i REQ, ADR, OPEN, ricerche, SPEC e documenti knowledge correlati.
 
-Arricchisci lo stesso file YAML con problema/contesto, proposta, scope e out of scope, boundary, attività ordinate, sottotask atomici, criteri di accettazione oggettivi, dipendenze e relazioni, documentazione correlata e readiness note sostenuti dalle evidenze. Conserva id e percorso. Non creare un catalogo feature, un documento sostitutivo o una decisione tecnica non supportata.
+Arricchisci lo stesso file YAML con problema/contesto, proposta, scope e out of scope, piattaforma definita nell'ontologia, gruppo/ordine di consegna, boundary, attività ordinate, sottotask atomici, criteri di accettazione oggettivi, dipendenze e relazioni, documentazione correlata e readiness note sostenuti dalle evidenze. Conserva id e percorso. Non creare un catalogo feature, un documento sostitutivo o una decisione tecnica non supportata.
 
-Aggiorna `repodoc/specs/index.md` nella stessa modifica affinché la SPEC compaia una sola volta nella sezione del ciclo di vita corrispondente allo stato risultante. Assicurati che `repodoc/index.md` colleghi questo indice specializzato.
+Aggiorna `repodoc/specs/index.md` nella stessa modifica affinché la SPEC compaia una sola volta per ambito, gruppo e ordine di implementazione. Assicurati che `repodoc/index.md` colleghi questo indice specializzato.
 
 Applica esattamente le regole di stato:
 
 - mantieni `draft` finché la SPEC non è abbastanza coerente per una revisione;
 - imposta `proposed` quando è revisionabile, anche se completamente dettagliata ma ancora in attesa di approvazione;
-- imposta `ready` soltanto quando sono presenti tutti i dettagli richiesti e l'utente o la documentazione consolidata l'ha approvata esplicitamente;
+- imposta `ready` soltanto quando sono presenti tutti i dettagli richiesti, l'utente o la documentazione consolidata l'ha approvata esplicitamente e ambito, piattaforma, gruppo e ordine sono validi;
 - non pubblicare issue; lascia null `github.issue` e `github.synced_at`.
 
 Opera nel working tree e nel branch già attivi. Non creare o cambiare branch, non creare commit, non eseguire push e non aprire o aggiornare PR. Conserva modifiche estranee e verifica file, diff locale e assenza di una issue GitHub.

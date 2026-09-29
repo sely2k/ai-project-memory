@@ -16,8 +16,8 @@ Leggi `repodoc/memory-protocol.md` nello stato corrente della repository e appli
 2. Analizza i documenti di origine insieme a `project.md` e `architecture.md` pertinenti e individua lavoro futuro concreto non ancora tracciato.
 3. Cerca duplicati semantici in tutti i file `repodoc/specs/SPEC-*.yaml`, inclusi quelli rejected, superseded, submitted e closed. Non duplicarli.
 4. Assegna l'identificativo `SPEC-xxx` successivo al più alto già esistente.
-5. Crea un file YAML per proposta secondo lo schema del protocollo. Imposta `status: proposed`; includi `summary`, `motivation`, riferimenti ai documenti di origine, campi GitHub vuoti e soltanto dettagli sostenuti dalle evidenze. Non inventare scope, attività o criteri di accettazione per far sembrare completo il file.
-6. Crea o aggiorna `repodoc/specs/index.md`, collocando ogni SPEC una sola volta nella sezione del ciclo di vita prevista dal protocollo. Assicurati che `repodoc/index.md` colleghi questo indice specializzato invece di elencare le singole SPEC.
+5. Crea un file YAML per proposta secondo lo schema del protocollo. Imposta `status: proposed`; includi `summary`, `motivation`, riferimenti ai documenti di origine, campi GitHub vuoti e soltanto dettagli sostenuti dalle evidenze. Deriva `scope`, `platform` definita nell'ontologia e `delivery.group`/`delivery.order` solo se sostenuti; altrimenti usa valori di pianificazione null. Non inventare attività o criteri di accettazione per far sembrare completo il file.
+6. Crea o aggiorna `repodoc/specs/index.md`, collocando ogni SPEC una sola volta per ambito, gruppo e ordine di implementazione. Assicurati che `repodoc/index.md` colleghi questo indice specializzato invece di elencare le singole SPEC.
 
 ## Salvataggio e limiti
 

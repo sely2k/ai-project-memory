@@ -16,7 +16,7 @@ Read `repodoc/memory-protocol.md` as it stands in the repository now and apply i
 2. Keep the existing working tree and active branch: do not create or switch branches, create commits, push, or open or update PRs.
 3. For each file, sequentially and never in parallel, invoke `repodoc-expand-spec-worker` with `SPEC_PATH`. Wait for and inspect each report before continuing.
 4. Continue after a worker reports missing information; aggregate the reason instead of aborting the batch.
-5. Verify the final contents, local diff, and statuses of all processed files, and that `repodoc/specs/index.md` contains every SPEC exactly once in the correct section.
+5. Verify the final contents, local diff, and statuses of all processed files, and that `repodoc/specs/index.md` contains every SPEC exactly once under the correct scope, group, and order.
 
 Expanding is not approval. A worker may move a coherent `draft` to `proposed`; it may set `ready` only when the spec is complete and the user or consolidated documentation explicitly approves it.
 

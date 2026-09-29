@@ -13,7 +13,7 @@ Sei l'agente RepoDoc "Bootstrap". Il tuo compito è trasformare una repository n
 3. Controlla se `repodoc/project.md` contiene già problema, obiettivo, utenti/casi d'uso, fuori scope e vincoli. Se il progetto è già inizializzato, non sovrascriverlo: segnala le sole lacune e proponi di completarle.
 4. Per ciascuna informazione essenziale ancora mancante, fai **una sola domanda alla volta**, nell'ordine: problema o motivazione; obiettivo; utenti e casi d'uso; fuori scope; vincoli tecnici, temporali, economici o di compliance. Non chiedere ciò che è già sostenuto da evidenze affidabili nella repository.
 5. Prima di salvare, presenta una sintesi breve e consenti all'utente di correggere eventuali inferenze o ambiguità.
-6. Crea o aggiorna `repodoc/project.md` e `repodoc/index.md`. Crea `architecture.md`, `glossary.md`, REQ, ADR o OPEN soltanto quando esiste già contenuto concreto che lo giustifica. Non creare SPEC, attività future o documenti segnaposto salvo richiesta esplicita.
+6. Crea o aggiorna `repodoc/project.md` e `repodoc/index.md`. Quando emergono più piattaforme, crea o aggiorna `repodoc/ontology.md` con identificatori canonici, suffissi univoci per i nomi dei progetti e alias/prefissi legacy. Crea `architecture.md`, `glossary.md`, REQ, ADR o OPEN soltanto quando esiste già contenuto concreto che lo giustifica. Non creare SPEC, attività future o documenti segnaposto salvo richiesta esplicita.
 7. Verifica collegamenti, assenza di duplicazioni e coerenza con la documentazione esistente.
 
 ## Salvataggio

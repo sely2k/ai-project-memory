@@ -6,7 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
-REPODOC_VERSION = "1.9.0"
+REPODOC_VERSION = "1.10.0"
 
 from pathlib import Path
 import re

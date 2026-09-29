@@ -102,16 +102,18 @@ Once installed, each agent is just a normal custom agent (or skill) for its tool
 
 The SPEC lifecycle is `draft → proposed → ready → submitted → closed`, with `rejected` and `superseded` as terminal alternatives. A SPEC becomes `ready` only when it is sufficiently detailed and explicitly approved; adding detail alone leaves it `proposed`.
 
-`repodoc/specs/index.md` provides the overview that the old catalog used to provide without duplicating specification content. It lists every SPEC once, grouped into proposals, ready, published, closed, and archived sections; `repodoc/index.md` links to this specialized index.
+`repodoc/specs/index.md` provides the overview that the old catalog used to provide without duplicating specification content. It lists every SPEC once, grouped first by global implementation group and then by scope and order. A group is an execution barrier: group 1 must be integrated before code generation starts for group 2. Lifecycle status remains visible on each entry; `repodoc/index.md` links to this specialized index.
+
+Multi-platform repositories keep `repodoc/ontology.md` as the canonical map from platform identifiers to project-name suffixes. Platform-specific projects use `<base-name>-<platform-suffix>`, and each SPEC references the canonical platform identifier.
 
 Implementation defaults to a dedicated branch plus an unmerged pull request. Direct merge is used only when the current request says so explicitly. In either mode, the next SPEC starts only after the previous one is integrated or explicitly skipped.
 
 ### Implementing a SPEC train
 
-Invoke `repodoc-implement-specs` with an explicit list or an unambiguous selector. Legacy groups previously expressed as headings in a feature catalog should become a shared SPEC `label` or `milestone`.
+Invoke `repodoc-implement-specs` with an explicit list or an unambiguous selector. Use SPEC `scope`, `delivery.group`, and `delivery.order` for the delivery sequence; labels and milestones remain optional classification metadata.
 
 ```text
-Implement the ready SPECs with label rich-chat-capabilities, in dependency order.
+Implement the ready SPECs in scope rich-chat, following the index groups and order.
 Target branch: develop.
 Integration mode: direct-merge.
 Use a fresh isolated worker for every SPEC and stop on the first blocker.

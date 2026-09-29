@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.9.0 -->
+<!-- repodoc:version 1.10.0 -->
 
 # Persistent memory protocol
 
@@ -55,11 +55,12 @@ Adapt document types to what already exists. Do not create unnecessary documents
 * `project`: project context;
 * `architecture`: architecture;
 * `glossary`: terminology;
+* `ontology`: project ontology, including the platform-to-naming-suffix map;
 * `REQ-xxx-<title>`: requirements;
 * `OPEN-xxx-<title>`: open questions;
 * `ADR-xxx-<title>`: decisions;
 * `SPEC-xxx-<title>`: specifications, including proposed work (one YAML file per spec, see [Specifications](#specifications));
-* `specs-index`: the navigational index of every SPEC, grouped by lifecycle status;
+* `specs-index`: the navigational index of every SPEC, grouped by ordered implementation group and then by scope, with lifecycle status visible on every entry;
 * `research`: research;
 * `knowledge`: stable, consolidated knowledge — not proposed or planned work, which belongs in `SPEC-xxx-<title>` files.
 
@@ -68,6 +69,12 @@ Create these documents only when needed. The concrete location of each type (fil
 ## Linked knowledge base
 
 Create focused, indexed documents connected to one another. Avoid oversized content, excessive fragmentation, and duplication; keep one primary source for each piece of information. The concrete linking mechanism depends on the configured backend.
+
+## Ontology and multi-platform naming
+
+When a project includes artifacts for one or more specific platforms, maintain a canonical map in the `ontology` document between every platform identifier and its naming suffix; it is mandatory for multi-platform projects. Every platform-specific project, module, or artifact must end with the registered suffix, using `<base-name>-<platform-suffix>` unless the repository already has an established convention. Do not invent local suffix variants or reuse one suffix for different platforms.
+
+The ontology must distinguish at least the canonical identifier, display name, suffix, and any accepted legacy aliases or prefixes. If the repository calls a code a “prefix” even though it appears as a suffix in names, record that correspondence explicitly. SPECs identify their platform through the ontology's canonical identifier; shared artifacts use an explicit identifier such as `shared`, also mapped there.
 
 ## Metadata
 
@@ -141,6 +148,11 @@ id: SPEC-014
 title: Support multi-backend export
 status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
 type: feature            # feature | bug | task | chore
+scope: catalog            # canonical functional or technical scope
+platform: web             # identifier defined in the project ontology
+delivery:
+  group: 1                # fully completed before the next group starts
+  order: 2                # SPEC order within the group
 labels: [backend, export]
 assignees: []
 milestone: null
@@ -173,15 +185,15 @@ Use statuses consistently:
 
 Moving a SPEC to `ready` requires both sufficient detail and explicit approval in the user request or consolidated project documentation. Expanding a SPEC does not by itself imply approval; keep it `proposed` when it is detailed but still awaiting a decision.
 
-Maintain one `specs-index` at the path defined by the configured backend. It is a navigational projection, not another source of specification content. Group every SPEC exactly once under:
+Maintain one `specs-index` at the path defined by the configured backend. It is a navigation and sequencing projection, not another source of specification content. Organize every SPEC exactly once using this hierarchy:
 
-* **Proposals**: `draft`, `proposed`;
-* **Ready**: `ready`;
-* **Published**: `submitted`;
-* **Closed**: `closed`;
-* **Archived**: `rejected`, `superseded`.
+1. **implementation group** (`delivery.group`), in ascending numeric order;
+2. **scope** (`scope`), using a stable canonical identifier;
+3. **order within the group** (`delivery.order`), ascending even across different scopes.
 
-Each entry contains only the SPEC id linked to its canonical document, title, type, status, and updated date. Never copy summary, motivation, body, tasks, or acceptance criteria into the index. Create the index with the first SPEC and update it whenever a SPEC is created, renamed, changes status, or is removed. The general memory `index` links to `specs-index`; it does not enumerate individual SPECs.
+The group is a global execution barrier: all selected ready SPECs in group 1, regardless of scope, must be implemented and integrated before code is generated for group 2, and so on. SPECs in the same group remain sequential unless parallel work is explicitly requested and dependency-compatible. `delivery.group` and `delivery.order` must be positive integers and the pair must be unique across the whole index; declared dependencies and delivery order must not conflict. SPECs that cannot yet be planned may use `null` values and belong in a final **Unplanned** section grouped by scope; they cannot become `ready` until scope, platform, group, and order are defined.
+
+Each entry contains only the SPEC id linked to its canonical document, title, platform, type, status, group, order, and updated date. Lifecycle status remains visible and uses `draft`/`proposed`/`ready`/`submitted`/`closed`/`rejected`/`superseded`, but it no longer determines the index's primary grouping. Never copy summary, motivation, body, tasks, or acceptance criteria into the index. Create the index with the first SPEC and update it whenever a SPEC is created, renamed, changes status, scope, platform, or order, or is removed. The general memory `index` links to `specs-index`; it does not enumerate individual SPECs.
 
 Reference other specs in `relations` by their `id`, so links stay valid before any issue exists. Resolve them to real issue numbers only when publishing, by looking up each referenced spec's `github.issue`.
 
@@ -202,8 +214,8 @@ Implementing code from SPECs is never automatic. Start only on explicit request 
 For a request covering multiple SPECs, use an orchestrator/worker model:
 
 1. resolve the selected SPECs from `specs-index` and their canonical files;
-2. validate that every selected SPEC is `ready`, all referenced prerequisites exist, and the execution order respects their dependencies;
-3. process them sequentially unless the user explicitly requests parallel work and the repository can provide isolated worktrees and non-overlapping integration paths;
+2. validate that every selected SPEC is `ready`, has scope, platform, group, and order, all referenced prerequisites exist, and the index sequence respects their dependencies;
+3. process groups in ascending order and complete integration of the whole current group before generating code for the next; within each group process SPECs by `delivery.order`, unless the user explicitly requests parallel work and the repository can provide isolated worktrees and non-overlapping integration paths;
 4. launch a fresh isolated implementation worker for each SPEC; the orchestrator coordinates but never writes implementation code itself;
 5. give the worker only one SPEC, its relevant source context, the target branch, and the requested integration policy;
 6. require the worker to implement, test, commit, and verify that SPEC without silently introducing decisions absent from the specification;

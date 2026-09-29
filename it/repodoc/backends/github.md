@@ -16,6 +16,7 @@ GITHUB_REPOSITORY: <owner>/<repo>
 | `project` | `repodoc/project.md` |
 | `architecture` | `repodoc/architecture.md` |
 | `glossary` | `repodoc/glossary.md` |
+| `ontology` | `repodoc/ontology.md` |
 | `REQ-xxx-<title>` | `repodoc/requirement/REQ-xxx-<title>.md` |
 | `OPEN-xxx-<title>` | `repodoc/openpoint/OPEN-xxx-<title>.md` |
 | `ADR-xxx-<title>` | `repodoc/decisions/ADR-xxx-<title>.md` |
@@ -26,23 +27,41 @@ GITHUB_REPOSITORY: <owner>/<repo>
 
 Le specifiche proposte e quelle completamente dettagliate usano gli stessi file `repodoc/specs/SPEC-xxx-<title>.yaml`. Non creare un catalogo feature separato: usa `status: proposed` per il lavoro in attesa di approvazione e arricchisci lo stesso file mentre matura.
 
-`repodoc/specs/index.md` raggruppa i collegamenti a tutti i file SPEC per stato del ciclo di vita, usando le sezioni definite dal protocollo di base. Contiene soltanto metadati di navigazione e va aggiornato atomicamente con ogni creazione o cambio di stato di una SPEC. `repodoc/index.md` collega questo indice specializzato invece di elencare le singole SPEC.
+`repodoc/specs/index.md` raggruppa i collegamenti a tutti i file SPEC prima per gruppo di implementazione globale, poi per ambito e ordine, secondo il protocollo di base. Contiene soltanto metadati di navigazione e sequenziamento e va aggiornato atomicamente quando cambia una SPEC. `repodoc/index.md` collega questo indice specializzato invece di elencare le singole SPEC.
 
-Usa questa struttura, omettendo le righe delle tabelle quando una sezione è vuota ma mantenendo tutte le intestazioni:
+Usa questa struttura, creando un'intestazione per ogni gruppo presente in ordine crescente e mantenendo sempre la sezione finale Non pianificate:
 
 ```markdown
 # Specifiche
 
-## Proposte
-| SPEC | Titolo | Tipo | Stato | Aggiornata |
-|---|---|---|---|---|
-| [SPEC-014](./SPEC-014-support-multi-backend-export.yaml) | Support multi-backend export | feature | proposed | 2026-09-28 |
+## Gruppo 1
 
-## Pronte
-## Pubblicate
-## Chiuse
-## Archiviate
+### Ambito: catalog
+| Ordine | SPEC | Titolo | Piattaforma | Tipo | Stato | Aggiornata |
+|---|---|---|---|---|---|---|
+| 1 | [SPEC-014](./SPEC-014-support-multi-backend-export.yaml) | Support multi-backend export | web | feature | ready | 2026-09-28 |
+
+## Gruppo 2
+
+## Non pianificate
+
+### Ambito: catalog
 ```
+
+`repodoc/ontology.md` contiene la tabella canonica per il naming multipiattaforma. Struttura minima:
+
+```markdown
+# Ontologia
+
+## Piattaforme e suffissi
+| Identificatore | Nome | Suffisso | Alias/prefissi legacy |
+|---|---|---|---|
+| web | Web | web | frontend |
+| ios | iOS | ios | apple-mobile |
+| shared | Condiviso | shared | common |
+```
+
+Un progetto specifico di piattaforma usa `<nome-base>-<suffisso>`, per esempio `shop-web` e `shop-ios`. Il valore `platform` di ogni SPEC deve risolvere una riga di questa tabella.
 
 ### Collegamenti
 
@@ -117,7 +136,7 @@ Solo su richiesta esplicita, per un file `SPEC-xxx-<title>` con `status: ready`:
 2. Risolvi `relations.parent`, `relations.children` e `relations.related` leggendo il `github.issue` di ciascuna specifica referenziata.
 3. Crea la issue (`gh issue create --title ... --body-file ... --label ... --assignee ... --milestone ...`), oppure aggiornala con `gh issue edit` se `github.issue` è già valorizzato.
 4. Imposta la relazione parent/children tramite la funzionalità nativa dei sub-issue di GitHub; rendi `relations.related` come elenco `Related: #...` nel corpo della issue, dato che GitHub non ha un tipo di collegamento non gerarchico nativo.
-5. Scrivi `github.issue` e `github.synced_at` nel file YAML, porta `status` a `submitted` e sposta la voce della SPEC in Pubblicate dentro `repodoc/specs/index.md` nella stessa operazione. In modalità chat includi tutto nello stesso commit della PR persistente; in modalità CLI lascia gli aggiornamenti nel working tree senza creare commit.
+5. Scrivi `github.issue` e `github.synced_at` nel file YAML, porta `status` a `submitted` e aggiorna la voce della SPEC nel relativo gruppo/ambito dentro `repodoc/specs/index.md` nella stessa operazione. In modalità chat includi tutto nello stesso commit della PR persistente; in modalità CLI lascia gli aggiornamenti nel working tree senza creare commit.
 6. Verifica l'esito reale rileggendo la issue tramite il connector o l'API, e riporta i link delle issue create o aggiornate.
 
 ### Implementare le SPEC come codice

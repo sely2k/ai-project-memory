@@ -24,7 +24,8 @@ For each document and across documents, check:
 - **Duplicated source of truth**: the same information described divergently in multiple documents, including proposed work copied into an informal feature list instead of living only in its SPEC file.
 - **Invalid SPEC lifecycle**: unsupported statuses; `ready` without complete detail and explicit approval; `submitted` without `github.issue`; rejected or superseded work still treated as active.
 - **Inconsistent terminology** against `repodoc/glossary.md`, if it exists.
-- **Misaligned indexes**: `repodoc/index.md` does not link the specialized index, or a SPEC is missing, duplicated, stale, or grouped under the wrong status section in `repodoc/specs/index.md`.
+- **Misaligned indexes and planning**: the specialized index is not linked, or a SPEC is missing, duplicated, stale, under the wrong scope/group/order, in a duplicate position, or ordered against its dependencies.
+- **Invalid platform naming**: a SPEC platform is absent from `repodoc/ontology.md`, suffix mappings collide, or a platform-specific project name omits its mapped suffix.
 - **Unresolvable `SPEC` relations** (`relations.parent`/`children`/`related` pointing to nonexistent `SPEC-xxx`).
 - **Missing or stale metadata** (`status`, `updated`, `related`).
 - **Naming that does not match** the configured backend's paths.

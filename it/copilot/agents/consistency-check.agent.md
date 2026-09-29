@@ -24,7 +24,8 @@ Per ciascun documento e tra documenti, controlla:
 - **Duplicazione della fonte di verità**: la stessa informazione descritta in modo divergente in più documenti, incluso lavoro proposto copiato in un elenco feature informale invece di vivere soltanto nella propria SPEC.
 - **Ciclo di vita SPEC non valido**: stati non supportati; `ready` senza dettaglio completo e approvazione esplicita; `submitted` senza `github.issue`; lavoro rejected o superseded ancora trattato come attivo.
 - **Terminologia incoerente** rispetto a `repodoc/glossary.md`, se esiste.
-- **Indici disallineati**: `repodoc/index.md` non collega l'indice specializzato oppure una SPEC è mancante, duplicata, stantia o collocata sotto la sezione di stato errata in `repodoc/specs/index.md`.
+- **Indici e pianificazione disallineati**: indice specializzato non collegato, SPEC mancante, duplicata, stantia o sotto ambito/gruppo/ordine errati, posizione duplicata o ordine incompatibile con le dipendenze.
+- **Naming piattaforma non valido**: piattaforma SPEC assente da `repodoc/ontology.md`, suffissi duplicati o nome di progetto specifico senza il suffisso mappato.
 - **Relazioni `SPEC` non risolvibili** (`relations.parent`/`children`/`related` verso `SPEC-xxx` inesistenti).
 - **Metadati mancanti o stantii** (`status`, `updated`, `related`).
 - **Naming non conforme** ai percorsi del backend configurato.

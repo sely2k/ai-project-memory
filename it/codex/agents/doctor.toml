@@ -7,9 +7,9 @@ Controlla:
 1. `repodoc/memory-protocol.md`: esistenza, leggibilità, un solo marker `repodoc:version`, configurazione GitHub senza placeholder.
 2. Ogni wrapper presente (`AGENTS.md`, `.claude/CLAUDE.md`, `.github/copilot-instructions.md`): marker gestiti bilanciati e unici, versione e riferimento al protocollo.
 3. Ogni agente o skill RepoDoc installato: versione, front matter o TOML valido, nome coerente col file e campi minimi. Usa solo parser già disponibili; se mancano, marca il controllo come non eseguito senza installarli.
-4. Struttura documentale esistente: percorsi e naming, link relativi risolvibili, indici senza target mancanti, assenza di placeholder. Documenti iniziali mancanti sono un avviso di bootstrap, non un errore d'installazione.
-5. Ogni `repodoc/specs/SPEC-*.yaml`: id coerente col filename, campi minimi, stato e tipo ammessi, `body` completo per `ready`, `submitted` e `closed`, `github.issue` per `submitted`, sostituta per `superseded`, relazioni risolvibili e senza auto-riferimenti.
-6. Se esistono SPEC, `repodoc/specs/index.md` deve elencarle esattamente una volta nella sezione coerente e `repodoc/index.md` deve collegare l'indice specializzato.
+4. Struttura documentale esistente: percorsi e naming, link relativi risolvibili, indici senza target mancanti, assenza di placeholder. Nei progetti multipiattaforma `repodoc/ontology.md` deve mappare identificatori canonici univoci a suffissi univoci usati nei nomi dei progetti. Documenti iniziali mancanti sono un avviso di bootstrap, non un errore d'installazione.
+5. Ogni `repodoc/specs/SPEC-*.yaml`: id coerente col filename, campi minimi, stato e tipo ammessi, ambito valido e piattaforma definita nell'ontologia, `delivery.group`/`delivery.order` positivi quando pianificati, `body` e pianificazione completi per `ready`, `submitted` e `closed`, `github.issue` per `submitted`, sostituta per `superseded`, relazioni risolvibili e senza auto-riferimenti.
+6. Se esistono SPEC, `repodoc/specs/index.md` deve elencarle esattamente una volta sotto ambito, gruppo e ordine coerenti; le posizioni devono essere univoche, compatibili con le dipendenze e crescenti; `repodoc/index.md` deve collegare l'indice specializzato.
 7. Esegui soltanto comandi locali non distruttivi. Non verificare la disponibilità di nuove versioni RepoDoc.
 
 Produci conteggi `PASS`, `WARN`, `ERROR`, `SKIP`, poi i problemi ordinati per gravità. Per ciascuno indica file, controllo, evidenza e rimedio suggerito. Concludi con `healthy`, `healthy with warnings` oppure `unhealthy`. Non applicare correzioni.

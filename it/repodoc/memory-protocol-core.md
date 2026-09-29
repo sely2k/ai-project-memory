@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.9.0 -->
+<!-- repodoc:version 1.10.0 -->
 
 # Protocollo di memoria persistente
 
@@ -56,11 +56,12 @@ Adatta i tipi di documento a quelli già esistenti. Non creare documenti o tipi 
 * `project`: contesto del progetto;
 * `architecture`: architettura;
 * `glossary`: termini;
+* `ontology`: ontologia del progetto, inclusa la mappa tra piattaforme e suffissi di naming;
 * `REQ-xxx-<title>`: requisiti;
 * `OPEN-xxx-<title>`: questioni aperte;
 * `ADR-xxx-<title>`: decisioni;
 * `SPEC-xxx-<title>`: specifiche, incluso il lavoro proposto (uno YAML per specifica, vedi [Specifiche](#specifiche));
-* `specs-index`: indice di navigazione di tutte le SPEC, raggruppate per stato del ciclo di vita;
+* `specs-index`: indice di navigazione di tutte le SPEC, raggruppate per gruppo di implementazione ordinato e, al suo interno, per ambito, con lo stato visibile per ogni voce;
 * `research`: ricerche;
 * `knowledge`: conoscenza stabile consolidata — non lavoro proposto o pianificato, che appartiene ai file `SPEC-xxx-<title>`.
 
@@ -69,6 +70,12 @@ Crea questi documenti solo quando servono. La posizione concreta di ciascun tipo
 ## Knowledge base collegata
 
 Crea documenti focalizzati e indicizzati, collegati tra loro. Evita contenuti enormi, frammentazione e duplicazioni; mantieni una fonte principale per informazione. Il meccanismo di collegamento concreto dipende dal backend configurato.
+
+## Ontologia e naming multipiattaforma
+
+Quando il progetto comprende artefatti specifici per una o più piattaforme, mantieni nel documento `ontology` una mappa canonica tra ogni identificatore di piattaforma e il relativo suffisso di naming; per i progetti multipiattaforma è obbligatoria. Ogni progetto, modulo o artefatto specifico di piattaforma deve terminare con il suffisso registrato, secondo la forma `<nome-base>-<suffisso-piattaforma>` salvo una convenzione già consolidata dalla repository. Non inventare varianti locali del suffisso e non usare lo stesso suffisso per piattaforme diverse.
+
+L'ontologia deve distinguere almeno identificatore canonico, nome leggibile, suffisso e alias o prefissi legacy eventualmente accettati. Se la repository chiama “prefisso” un codice che nel nome compare come suffisso, registra esplicitamente questa corrispondenza. Le SPEC indicano la piattaforma tramite l'identificatore canonico dell'ontologia; gli artefatti condivisi usano un identificatore esplicito come `shared`, anch'esso mappato.
 
 ## Metadati
 
@@ -150,6 +157,11 @@ id: SPEC-014
 title: Support multi-backend export
 status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
 type: feature            # feature | bug | task | chore
+scope: catalog            # ambito funzionale o tecnico canonico
+platform: web             # identificatore definito nell'ontologia del progetto
+delivery:
+  group: 1                # completato interamente prima del gruppo successivo
+  order: 2                # ordine della SPEC all'interno del gruppo
 labels: [backend, export]
 assignees: []
 milestone: null
@@ -182,15 +194,15 @@ Usa gli stati in modo coerente:
 
 Il passaggio di una SPEC a `ready` richiede sia dettaglio sufficiente sia approvazione esplicita nella richiesta dell'utente o nella documentazione consolidata del progetto. Espandere una SPEC non implica di per sé approvarla: mantienila `proposed` quando è dettagliata ma ancora in attesa di decisione.
 
-Mantieni un solo `specs-index` nel percorso definito dal backend configurato. È una proiezione di navigazione, non un'altra fonte del contenuto delle specifiche. Raggruppa ogni SPEC una sola volta sotto:
+Mantieni un solo `specs-index` nel percorso definito dal backend configurato. È una proiezione di navigazione e sequenziamento, non un'altra fonte del contenuto delle specifiche. Organizza ogni SPEC una sola volta con questa gerarchia:
 
-* **Proposte**: `draft`, `proposed`;
-* **Pronte**: `ready`;
-* **Pubblicate**: `submitted`;
-* **Chiuse**: `closed`;
-* **Archiviate**: `rejected`, `superseded`.
+1. **gruppo di implementazione** (`delivery.group`), in ordine numerico crescente;
+2. **ambito** (`scope`), usando un identificatore canonico e stabile;
+3. **ordine nel gruppo** (`delivery.order`), in ordine numerico crescente anche tra ambiti diversi.
 
-Ogni voce contiene soltanto l'id della SPEC collegato al documento canonico, titolo, tipo, stato e data di aggiornamento. Non copiare mai nell'indice sintesi, motivazione, body, attività o criteri di accettazione. Crea l'indice insieme alla prima SPEC e aggiornalo ogni volta che una SPEC viene creata, rinominata, cambia stato o viene rimossa. L'`index` generale della memoria collega `specs-index`; non elenca le singole SPEC.
+Il gruppo è una barriera di esecuzione globale: tutte le SPEC ready selezionate del gruppo 1, qualunque sia il loro ambito, devono essere implementate e integrate prima di generare codice per il gruppo 2, e così via. Le SPEC dello stesso gruppo restano sequenziali salvo richiesta esplicita di parallelismo e compatibilità delle dipendenze. `delivery.group` e `delivery.order` devono essere interi positivi e la coppia deve essere univoca nell'intero indice; dipendenze dichiarate e ordine di consegna non possono contraddirsi. Le SPEC non ancora pianificabili possono usare valori `null` e vanno nella sezione finale **Non pianificate**, raggruppate per ambito; non possono passare a `ready` finché ambito, piattaforma, gruppo e ordine non sono definiti.
+
+Ogni voce contiene soltanto l'id della SPEC collegato al documento canonico, titolo, piattaforma, tipo, stato, gruppo, ordine e data di aggiornamento. Lo stato resta visibile e usa il ciclo `draft`/`proposed`/`ready`/`submitted`/`closed`/`rejected`/`superseded`, ma non determina più il raggruppamento principale. Non copiare mai nell'indice sintesi, motivazione, body, attività o criteri di accettazione. Crea l'indice insieme alla prima SPEC e aggiornalo ogni volta che una SPEC viene creata, rinominata, cambia stato, ambito, piattaforma o ordine, oppure viene rimossa. L'`index` generale della memoria collega `specs-index`; non elenca le singole SPEC.
 
 Fai riferimento alle altre specifiche in `relations` tramite il loro `id`, così i collegamenti restano validi prima che esista una issue. Risolvili in numeri di issue reali solo al momento della pubblicazione, leggendo il `github.issue` di ciascuna specifica referenziata.
 
@@ -211,8 +223,8 @@ L'implementazione di codice a partire dalle SPEC non è mai automatica. Iniziala
 Per una richiesta che comprende più SPEC, usa un modello orchestratore/worker:
 
 1. risolvi le SPEC selezionate dallo `specs-index` e dai relativi file canonici;
-2. verifica che ogni SPEC selezionata sia `ready`, che tutti i prerequisiti referenziati esistano e che l'ordine di esecuzione rispetti le dipendenze;
-3. processale in sequenza, salvo richiesta esplicita di lavoro parallelo e disponibilità nella repository di worktree isolati e percorsi di integrazione non sovrapposti;
+2. verifica che ogni SPEC selezionata sia `ready`, abbia ambito, piattaforma, gruppo e ordine, che tutti i prerequisiti referenziati esistano e che la sequenza dell'indice rispetti le dipendenze;
+3. processa i gruppi in ordine crescente e completa l'integrazione dell'intero gruppo corrente prima di generare codice per il successivo; dentro ciascun gruppo processa le SPEC per `delivery.order`, salvo richiesta esplicita di lavoro parallelo e disponibilità nella repository di worktree isolati e percorsi di integrazione non sovrapposti;
 4. avvia un worker di implementazione nuovo e isolato per ogni SPEC; l'orchestratore coordina ma non scrive mai direttamente il codice implementativo;
 5. passa al worker una sola SPEC, il relativo contesto di origine, il branch target e la policy di integrazione richiesta;
 6. imponi al worker di implementare, testare, committare e verificare quella SPEC senza introdurre silenziosamente decisioni assenti dalla specifica;

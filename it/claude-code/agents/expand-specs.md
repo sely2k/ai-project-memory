@@ -16,7 +16,7 @@ Leggi `repodoc/memory-protocol.md` nello stato corrente della repository e appli
 2. Conserva il working tree e il branch già attivi: non creare o cambiare branch, non creare commit, non eseguire push e non aprire o aggiornare PR.
 3. Per ogni file, in sequenza e mai in parallelo, invoca `repodoc-expand-spec-worker` passando `SPEC_PATH`. Attendi e controlla ogni resoconto prima di continuare.
 4. Se un worker segnala informazioni mancanti, registra il motivo e prosegui senza interrompere l'intero batch.
-5. Verifica contenuto finale, diff locale e stato di tutti i file processati e che `repodoc/specs/index.md` contenga ogni SPEC una sola volta nella sezione corretta.
+5. Verifica contenuto finale, diff locale e stato di tutti i file processati e che `repodoc/specs/index.md` contenga ogni SPEC una sola volta sotto ambito, gruppo e ordine corretti.
 
 Espandere non significa approvare. Un worker può portare una SPEC coerente da `draft` a `proposed`; può impostare `ready` soltanto quando la SPEC è completa e l'utente o la documentazione consolidata l'ha approvata esplicitamente.
 

@@ -16,8 +16,8 @@ Read `repodoc/memory-protocol.md` as it stands in the repository now and apply i
 2. Analyze the source documents plus relevant `project.md` and `architecture.md`, and identify concrete future work not already tracked.
 3. Search all existing `repodoc/specs/SPEC-*.yaml` files for semantic duplicates, including rejected, superseded, submitted, and closed specs. Do not duplicate them.
 4. Assign the next sequential `SPEC-xxx` identifier after the highest existing SPEC id.
-5. Create one YAML file per proposal with the protocol schema. Set `status: proposed`; include a concise `summary`, `motivation`, source-document references, empty GitHub fields, and only the detail supported by evidence. Do not invent scope, tasks, or acceptance criteria merely to make the file look complete.
-6. Create or update `repodoc/specs/index.md`, placing every SPEC exactly once in the lifecycle section required by the protocol. Ensure `repodoc/index.md` links to this specialized index instead of listing individual SPECs.
+5. Create one YAML file per proposal with the protocol schema. Set `status: proposed`; include a concise `summary`, `motivation`, source-document references, empty GitHub fields, and only the detail supported by evidence. Derive `scope`, ontology-backed `platform`, and `delivery.group`/`delivery.order` only when supported; otherwise use null planning values. Do not invent tasks or acceptance criteria merely to make the file look complete.
+6. Create or update `repodoc/specs/index.md`, placing every SPEC exactly once by scope, implementation group, and order. Ensure `repodoc/index.md` links to this specialized index instead of listing individual SPECs.
 
 ## Saving and limits
 
