@@ -258,7 +258,7 @@ def read_template(language: str, relative_path: str) -> str:
         try:
             with urlopen(url, timeout=30) as response:
                 return response.read().decode("utf-8")
-        except (HTTPError, URLError) as error:
+        except (HTTPError, URLError, TimeoutError) as error:
             errors.append(f"{url}: {error}")
     raise RuntimeError("Could not download template from any source:\n- " + "\n- ".join(errors))
 
