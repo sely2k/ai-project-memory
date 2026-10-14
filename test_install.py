@@ -11,13 +11,13 @@ TEMPLATE_ROOT = Path(__file__).resolve().parent
 
 
 class ManagedInstructionTests(unittest.TestCase):
-    def test_remote_templates_use_cdn_with_github_fallback(self):
+    def test_remote_templates_use_github_with_cdn_fallback(self):
         urls = install.template_base_urls()
 
-        self.assertEqual(urls[0], "https://cdn.jsdelivr.net/gh/sely2k/ai-project-memory@main")
-        self.assertEqual(urls[1], "https://raw.githubusercontent.com/sely2k/ai-project-memory/main")
+        self.assertEqual(urls[0], "https://raw.githubusercontent.com/sely2k/ai-project-memory/main")
+        self.assertEqual(urls[1], "https://cdn.jsdelivr.net/gh/sely2k/ai-project-memory@main")
 
-    def test_remote_template_falls_back_to_github_after_cdn_timeout(self):
+    def test_remote_template_falls_back_to_cdn_after_github_timeout(self):
         with patch.object(install.Path, "is_file", return_value=False), patch.object(
             install, "urlopen", side_effect=[TimeoutError("timed out"), BytesIO(b"template")]
         ) as mocked_urlopen:
@@ -25,8 +25,8 @@ class ManagedInstructionTests(unittest.TestCase):
 
         self.assertEqual(content, "template")
         self.assertEqual(mocked_urlopen.call_count, 2)
-        self.assertIn("cdn.jsdelivr.net", mocked_urlopen.call_args_list[0].args[0])
-        self.assertIn("raw.githubusercontent.com", mocked_urlopen.call_args_list[1].args[0])
+        self.assertIn("raw.githubusercontent.com", mocked_urlopen.call_args_list[0].args[0])
+        self.assertIn("cdn.jsdelivr.net", mocked_urlopen.call_args_list[1].args[0])
 
     def test_adds_block_without_replacing_existing_content(self):
         existing = "# Existing instructions\n\nKeep this rule.\n"

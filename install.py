@@ -242,8 +242,8 @@ def source_coordinates() -> tuple[str, str]:
 def template_base_urls() -> tuple[str, ...]:
     owner, repository = source_coordinates()
     return (
-        f"https://cdn.jsdelivr.net/gh/{owner}/{repository}@{SOURCE_BRANCH}",
         f"https://raw.githubusercontent.com/{owner}/{repository}/{SOURCE_BRANCH}",
+        f"https://cdn.jsdelivr.net/gh/{owner}/{repository}@{SOURCE_BRANCH}",
     )
 
 
