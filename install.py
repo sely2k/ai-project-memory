@@ -6,7 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
-REPODOC_VERSION = "1.10.0"
+REPODOC_VERSION = "1.11.0"
 
 from pathlib import Path
 import re
@@ -44,6 +44,7 @@ AGENT_FILES = {
         ("claude-code/agents/expand-spec-worker.md", ".claude/agents/repodoc-expand-spec-worker.md"),
         ("claude-code/agents/implement-specs.md", ".claude/agents/repodoc-implement-specs.md"),
         ("claude-code/agents/implement-spec-worker.md", ".claude/agents/repodoc-implement-spec-worker.md"),
+        ("claude-code/agents/review-spec-worker.md", ".claude/agents/repodoc-review-spec-worker.md"),
     ],
     "codex": [
         ("codex/agents/bootstrap.toml", ".codex/agents/repodoc-bootstrap.toml"),
@@ -54,6 +55,7 @@ AGENT_FILES = {
         ("codex/agents/expand-specs.toml", ".codex/agents/repodoc-expand-specs.toml"),
         ("codex/agents/implement-specs.toml", ".codex/agents/repodoc-implement-specs.toml"),
         ("codex/agents/implement-spec-worker.toml", ".codex/agents/repodoc-implement-spec-worker.toml"),
+        ("codex/agents/review-spec-worker.toml", ".codex/agents/repodoc-review-spec-worker.toml"),
     ],
     "copilot": [
         ("copilot/agents/bootstrap.agent.md", ".github/agents/repodoc-bootstrap.agent.md"),
@@ -64,6 +66,7 @@ AGENT_FILES = {
         ("copilot/agents/expand-specs.agent.md", ".github/agents/repodoc-expand-specs.agent.md"),
         ("copilot/agents/implement-specs.agent.md", ".github/agents/repodoc-implement-specs.agent.md"),
         ("copilot/agents/implement-spec-worker.agent.md", ".github/agents/repodoc-implement-spec-worker.agent.md"),
+        ("copilot/agents/review-spec-worker.agent.md", ".github/agents/repodoc-review-spec-worker.agent.md"),
     ],
 }
 # The spec-expansion skill is authored once and dropped at whichever

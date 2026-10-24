@@ -18,6 +18,9 @@ Enumerate every document managed by RepoDoc according to the configured backend'
 
 For each document and across documents, check:
 
+- SPEC status/approval/publication consistency, approved `submitted` work remaining executable, closure reasons, and implementation checkpoints against Git evidence;
+- mandatory `depends_on` resolution, cycles, self-references, and delivery order separately from informational `relations.related`, which must not be promoted automatically;
+
 - **Broken links**: relative links pointing to renamed, moved, or removed files.
 - **Non-reciprocal cross-references**: a `Related` entry that should point back and does not.
 - **Inconsistent status**: an `OPEN-xxx` `resolved` without a corresponding ADR when needed; an ADR resolving an OPEN still `open`; a `SPEC-xxx` `submitted` without a consistent `github.issue`.

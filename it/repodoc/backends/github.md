@@ -147,7 +147,9 @@ Usa le convenzioni di contribuzione documentate dalla repository quando esistono
 - crea `feature/<spec-id-minuscolo>-<slug-titolo>` per ogni SPEC, per esempio `feature/spec-005-titolo-breve`;
 - preferisci un git worktree isolato per non interferire con il checkout corrente dell'utente e con modifiche estranee;
 - in modalità `pull-request`, esegui il push del branch e apri una PR verso il branch target, senza eseguire il merge;
-- in modalità `direct-merge`, procedi soltanto quando la richiesta corrente autorizza esplicitamente il merge diretto, quindi integra e pubblica il branch target secondo le convenzioni della repository;
+- in modalità `direct-merge`, procedi soltanto quando la richiesta corrente autorizza esplicitamente il merge diretto; l'autorizzazione per una selezione vale per l'intero treno. Preferisci un merge commit salvo convenzioni diverse, poi pubblica e verifica il target remoto;
+- prima del push su un target, verifica i trigger di deployment e ottieni ogni autorizzazione aggiuntiva richiesta;
+- dopo revisione indipendente e verifica post-integrazione crea un tag annotato secondo le convenzioni o `spec/<spec-id-minuscolo>/completed`; non sovrascrivere tag esistenti e verifica merge e tag sul remoto;
 - elimina branch locali o remoti soltanto quando le convenzioni della repository o l'utente richiedono esplicitamente la pulizia, e soltanto dopo aver verificato l'integrazione riuscita.
 
 La PR RepoDoc persistente non è la PR di implementazione e non va mai usata come branch di codice.
@@ -164,6 +166,7 @@ Per questo backend, l'installer può copiare agenti dedicati che eseguono parti 
 - **Espandi specifica** (skill `repodoc-spec-expand`): arricchisce sul posto una SPEC draft o proposed esistente, su richiesta puntuale dell'utente.
 - **Espandi tutte le specifiche** (`repodoc-expand-specs`): scorre i file `SPEC-xxx-<title>.yaml` draft e proposed e arricchisce ciascuno sul posto. Il template Claude Code delega ogni espansione a `repodoc-expand-spec-worker`; i template Codex e Copilot applicano attualmente la stessa procedura in linea, un file alla volta.
 - **Implementa SPEC** (`repodoc-implement-specs`): orchestra un treno sequenziale di implementazione e avvia un nuovo `repodoc-implement-spec-worker` per ogni SPEC ready. Non scrive mai direttamente codice implementativo.
-- **Worker implementazione SPEC** (`repodoc-implement-spec-worker`): implementa esattamente una SPEC assegnata sul relativo branch di codice, esegue le verifiche e la integra soltanto secondo la policy richiesta. È un worker interno e non va riutilizzato tra SPEC diverse.
+- **Worker implementazione SPEC** (`repodoc-implement-spec-worker`): verifica il lavoro esistente e implementa soltanto ciò che manca per una SPEC sul relativo branch. Non integra, non crea tag e non aggiorna RepoDoc.
+- **Worker revisione SPEC** (`repodoc-review-spec-worker`): revisiona in sola lettura un commit implementativo esatto e restituisce problemi bloccanti, osservazioni ed evidenze strutturate. Serve un revisore nuovo dopo ogni commit modificato.
 
 Gli agenti che modificano la memoria e la skill di espansione seguono la modalità CLI o chat definita sopra; `repodoc-doctor` resta sempre read-only. Gli agenti di implementazione seguono il flusso separato su branch di codice dedicati.

@@ -21,10 +21,10 @@ For each document and across documents, check:
 - **Non-reciprocal cross-references**: a `Related` entry that should point back and does not (e.g. an ADR resolving a REQ that the REQ does not list back in `Related`).
 - **Inconsistent status**: an `OPEN-xxx` marked `resolved` without a corresponding ADR when the resolution is clearly a significant decision; an ADR claiming to resolve an OPEN that is still `open`; a `SPEC-xxx` with `status: submitted` but `github.issue: null` (or vice versa).
 - **Duplicated source of truth**: the same consolidated information described divergently in multiple documents, including proposed work copied into an informal feature list instead of living only in its `SPEC-xxx-<title>.yaml` file.
-- **Invalid SPEC lifecycle**: unsupported statuses; a `ready` SPEC without complete implementation detail and explicit approval; a `submitted` SPEC without `github.issue`; a rejected or superseded SPEC still treated as active work.
+- **Invalid SPEC lifecycle**: contradictory status/approval/publication; approved `submitted` work treated as non-executable; `closed` without `closure.reason`; an implementation checkpoint unsupported by Git evidence; rejected or superseded work treated as active.
 - **Inconsistent terminology** against `repodoc/glossary.md`, if it exists.
 - **Misaligned indexes**: stale or missing entries in `repodoc/index.md`; a missing link from it to `repodoc/specs/index.md`; a SPEC absent from the specialized index, listed more than once, or grouped under a section that does not match its YAML status.
-- **Unresolvable `SPEC` relations**: `relations.parent`/`children`/`related` pointing to `SPEC-xxx` that no longer exist.
+- **Invalid SPEC dependencies or relations**: missing, cyclic, self-referential, or delivery-conflicting `depends_on`; unresolved relations; or promotion of informational `relations.related` without evidence.
 - **Missing or stale metadata**: `status`, `updated`, `related` absent where the protocol requires them, or `updated` clearly older than the last substantive change visible in git.
 - **Naming that does not match** the configured backend's paths and conventions.
 

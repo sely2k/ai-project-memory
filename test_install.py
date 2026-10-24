@@ -205,26 +205,87 @@ class AgentTemplateTests(unittest.TestCase):
             ):
                 content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8")
                 self.assertIn("delivery.order", content)
-                self.assertIn("ontology", content.lower())
+                self.assertIn("ontology" if language == "en" else "ontologia", content.lower())
 
     def test_implementation_agents_use_one_fresh_worker_per_ready_spec(self):
         pairs = {
-            "claude-code": ("claude-code/agents/implement-specs.md", "claude-code/agents/implement-spec-worker.md"),
-            "codex": ("codex/agents/implement-specs.toml", "codex/agents/implement-spec-worker.toml"),
-            "copilot": ("copilot/agents/implement-specs.agent.md", "copilot/agents/implement-spec-worker.agent.md"),
+            "claude-code": ("claude-code/agents/implement-specs.md", "claude-code/agents/implement-spec-worker.md", "claude-code/agents/review-spec-worker.md"),
+            "codex": ("codex/agents/implement-specs.toml", "codex/agents/implement-spec-worker.toml", "codex/agents/review-spec-worker.toml"),
+            "copilot": ("copilot/agents/implement-specs.agent.md", "copilot/agents/implement-spec-worker.agent.md", "copilot/agents/review-spec-worker.agent.md"),
         }
         for language in ("it", "en"):
-            for tool, (orchestrator_source, worker_source) in pairs.items():
+            for tool, (orchestrator_source, worker_source, reviewer_source) in pairs.items():
                 mapped_sources = {source for source, _ in install.AGENT_FILES[tool]}
                 self.assertIn(orchestrator_source, mapped_sources)
                 self.assertIn(worker_source, mapped_sources)
+                self.assertIn(reviewer_source, mapped_sources)
 
                 orchestrator = (TEMPLATE_ROOT / language / orchestrator_source).read_text(encoding="utf-8")
                 worker = (TEMPLATE_ROOT / language / worker_source).read_text(encoding="utf-8")
-                for required in ("repodoc-implement-spec-worker", "ready", "pull-request", "direct-merge"):
+                reviewer = (TEMPLATE_ROOT / language / reviewer_source).read_text(encoding="utf-8")
+                for required in ("repodoc-implement-spec-worker", "repodoc-review-spec-worker", "pull-request", "direct-merge"):
                     self.assertIn(required, orchestrator)
                 for required in ("SPEC_PATH", "TARGET_BRANCH", "IMPLEMENTATION_BRANCH", "INTEGRATION_MODE"):
                     self.assertIn(required, worker)
+                for required in ("BASE_COMMIT", "HEAD_COMMIT", "blocking_findings", "observations", "verified_references"):
+                    self.assertIn(required, reviewer)
+
+    def test_implementation_train_contract_is_resumable_reviewed_and_tagged(self):
+        orchestrators = (
+            "claude-code/agents/implement-specs.md",
+            "codex/agents/implement-specs.toml",
+            "copilot/agents/implement-specs.agent.md",
+        )
+        for language in ("it", "en"):
+            for source in orchestrators:
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8")
+                for required in (
+                    "depends_on", "relations.related", "absent", "partial", "satisfied", "ambiguous",
+                    "MAX_REVIEW_CYCLES", "implementation", "verified", "completed", "develop",
+                ):
+                    self.assertIn(required, content, f"missing {required} in {language}/{source}")
+                self.assertIn("annotated" if language == "en" else "annotato", content)
+                self.assertIn("spec/<", content)
+
+    def test_protocol_separates_spec_lifecycle_and_defines_checkpoint_schema(self):
+        required = (
+            "approval:", "publication:", "depends_on:", "implementation:", "state: not_started",
+            "checkpoint_commit:", "spec_revision:", "checks:", "review:", "blocker:",
+            "merge_commit:", "tag:", "closure:", "reason:", "relations.related",
+        )
+        for language in ("it", "en"):
+            protocol = (TEMPLATE_ROOT / language / install.PROTOCOL_CORE).read_text(encoding="utf-8")
+            for value in required:
+                self.assertIn(value, protocol, f"missing {value} in {language} protocol")
+            self.assertIn("submitted", protocol)
+            self.assertIn("spec/<", protocol)
+
+    def test_reviewers_are_read_only_and_commit_specific(self):
+        reviewers = {
+            "claude-code": "claude-code/agents/review-spec-worker.md",
+            "codex": "codex/agents/review-spec-worker.toml",
+            "copilot": "copilot/agents/review-spec-worker.agent.md",
+        }
+        for language in ("it", "en"):
+            for tool, source in reviewers.items():
+                content = (TEMPLATE_ROOT / language / source).read_text(encoding="utf-8")
+                self.assertIn("HEAD_COMMIT", content)
+                self.assertIn("pass", content)
+                self.assertNotIn("Edit, Write", content)
+                if tool == "claude-code":
+                    front_matter = content.split("---", 2)[1]
+                    self.assertNotIn("Edit", front_matter)
+                    self.assertNotIn("Write", front_matter)
+
+    def test_documentation_contains_migration_and_ready_to_use_train_example(self):
+        readme = (TEMPLATE_ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Upgrading existing installations to 1.11", readme)
+        self.assertIn("SPEC-001 through SPEC-005", readme)
+        self.assertIn("Target branch: develop", readme)
+        for language, heading in (("en", "Upgrade notes for 1.11"), ("it", "Note di aggiornamento alla 1.11")):
+            installation = (TEMPLATE_ROOT / language / "INSTALLATION.md").read_text(encoding="utf-8")
+            self.assertIn(heading, installation)
+            self.assertIn("repodoc-review-spec-worker", installation)
 
     def test_protocol_requires_isolated_spec_implementation_workers(self):
         for language in ("it", "en"):

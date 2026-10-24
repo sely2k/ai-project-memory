@@ -147,7 +147,9 @@ Use the repository's documented contribution conventions when they exist. Otherw
 - create `feature/<lowercase-spec-id>-<title-slug>` for each SPEC, for example `feature/spec-005-short-title`;
 - prefer an isolated git worktree so the user's current checkout and unrelated changes remain untouched;
 - in `pull-request` mode, push the branch and open a PR against the target branch, but do not merge it;
-- in `direct-merge` mode, proceed only when the current request explicitly authorizes direct merge, then merge and push the target branch according to repository conventions;
+- in `direct-merge` mode, proceed only when the current request explicitly authorizes direct merge; selection-wide authorization applies to the whole train. Prefer a merge commit unless repository conventions say otherwise, then push and verify the remote target;
+- before pushing a target branch, inspect its deployment triggers and obtain any separately required authorization;
+- after independent review and post-integration verification, create an annotated completion tag using repository convention or `spec/<lowercase-spec-id>/completed`; never overwrite an existing tag, and verify both merge and tag remotely;
 - delete local or remote branches only when repository conventions or the user explicitly require cleanup, and only after verifying successful integration.
 
 The persistent RepoDoc PR is not the implementation PR and must never be used as a code branch.
@@ -164,6 +166,7 @@ For this backend, the installer can copy dedicated agents that run parts of this
 - **Expand spec** (`repodoc-spec-expand` skill): enriches one existing draft or proposed SPEC in place, on the user's specific request.
 - **Expand all specs** (`repodoc-expand-specs`): walks draft and proposed `SPEC-xxx-<title>.yaml` files and enriches each in place. The Claude Code template delegates each expansion to `repodoc-expand-spec-worker`; the Codex and Copilot templates currently apply the same procedure inline, one file at a time.
 - **Implement specs** (`repodoc-implement-specs`): orchestrates a sequential implementation train and launches a fresh `repodoc-implement-spec-worker` for each ready SPEC. It never writes implementation code itself.
-- **Implement spec worker** (`repodoc-implement-spec-worker`): implements exactly one assigned SPEC on its dedicated code branch, runs its verification, and integrates it only according to the requested policy. It is an internal worker and should not be reused across SPECs.
+- **Implement spec worker** (`repodoc-implement-spec-worker`): verifies existing work and implements only missing scope for one assigned SPEC on its dedicated branch. It never integrates, tags, or updates RepoDoc state.
+- **Review spec worker** (`repodoc-review-spec-worker`): independently reviews one exact implementation commit read-only and returns structured blocking findings, observations, and evidence. A fresh reviewer is required after every changed commit.
 
 Memory-changing agents and the expansion skill follow the CLI or chat mode defined above; `repodoc-doctor` always remains read-only. Implementation agents follow the separate dedicated code-branch flow.

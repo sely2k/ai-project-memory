@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.10.0 -->
+<!-- repodoc:version 1.11.0 -->
 
 # Persistent memory protocol
 
@@ -147,6 +147,8 @@ Unlike other document types, a spec is plain YAML, not Markdown with front matte
 id: SPEC-014
 title: Support multi-backend export
 status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
+approval: pending       # pending | approved
+publication: unpublished # unpublished | published
 type: feature            # feature | bug | task | chore
 scope: catalog            # canonical functional or technical scope
 platform: web             # identifier defined in the project ontology
@@ -163,6 +165,7 @@ motivation: |
 sources:
   - ../decisions/ADR-003-multi-backend.md
 body: null               # may be null for draft/proposed; required and complete for ready+
+depends_on: []           # mandatory prerequisite SPEC ids; not informational links
 relations:
   parent: null            # SPEC-xxx, maps to a GitHub sub-issue parent
   children: []             # SPEC-xxx list, maps to GitHub sub-issues
@@ -170,6 +173,22 @@ relations:
 github:
   issue: null              # owner/repo#123, set once the issue exists
   synced_at: null
+implementation:
+  state: not_started     # not_started | partial | verified | completed | blocked
+  branch: null
+  checkpoint_commit: null
+  spec_revision: null    # immutable blob/hash or commit identifying reviewed SPEC content
+  checks: []             # command, commit, result, and optional evidence reference
+  review: null           # reviewer, head_commit, verdict, cycle, findings reference
+  blocker: null
+  integration:
+    target: null
+    pull_request: null
+    merge_commit: null
+    tag: null
+closure:
+  reason: null           # completed | cancelled | duplicate | obsolete | other
+  note: null
 updated: ...
 ```
 
@@ -178,12 +197,16 @@ Use statuses consistently:
 * `draft`: the file is being authored and is not yet coherent enough for review;
 * `proposed`: the work is a reviewable proposal but has not yet been approved as implementation-ready;
 * `ready`: the proposal is approved and the scope, tasks, dependencies, and acceptance criteria are complete enough to implement;
-* `submitted`: the spec has been published as a GitHub issue;
-* `closed`: the work has been completed or otherwise closed;
+* `submitted`: compatibility status for an approved spec published as a GitHub issue; it remains executable;
+* `closed`: the work is no longer active; `closure.reason` distinguishes completed work from cancellation, duplication, obsolescence, or another reason;
 * `rejected`: the proposal was considered and declined;
 * `superseded`: another SPEC replaced this one; reference the replacement in `relations.related`.
 
 Moving a SPEC to `ready` requires both sufficient detail and explicit approval in the user request or consolidated project documentation. Expanding a SPEC does not by itself imply approval; keep it `proposed` when it is detailed but still awaiting a decision.
+
+Approval, publication, execution, and closure are separate dimensions. New or migrated files record `approval` and `publication` explicitly while retaining the legacy `status` field for compatibility: `ready` means approved/unpublished and `submitted` means approved/published. Both are eligible for implementation. Publishing changes only `publication`, GitHub metadata, and the compatible status projection; it never revokes approval. `implementation.state` tracks delivery progress, and `closed` requires `closure.reason`; only `closure.reason: completed` proves successful completion. When migrating older files, infer only deterministic values (`ready` -> approved/unpublished, `submitted` -> approved/published); leave ambiguous closure reasons for review rather than guessing.
+
+`depends_on` contains only mandatory prerequisite SPEC ids. `relations.related` remains an informational cross-reference and must never be promoted automatically. Dependencies must resolve, contain no self-reference or cycle, and agree with `delivery.group` and `delivery.order`: a prerequisite cannot be scheduled after its dependent. A contradiction blocks readiness or implementation.
 
 Maintain one `specs-index` at the path defined by the configured backend. It is a navigation and sequencing projection, not another source of specification content. Organize every SPEC exactly once using this hierarchy:
 
@@ -193,7 +216,7 @@ Maintain one `specs-index` at the path defined by the configured backend. It is 
 
 The group is a global execution barrier: all selected ready SPECs in group 1, regardless of scope, must be implemented and integrated before code is generated for group 2, and so on. SPECs in the same group remain sequential unless parallel work is explicitly requested and dependency-compatible. `delivery.group` and `delivery.order` must be positive integers and the pair must be unique across the whole index; declared dependencies and delivery order must not conflict. SPECs that cannot yet be planned may use `null` values and belong in a final **Unplanned** section grouped by scope; they cannot become `ready` until scope, platform, group, and order are defined.
 
-Each entry contains only the SPEC id linked to its canonical document, title, platform, type, status, group, order, and updated date. Lifecycle status remains visible and uses `draft`/`proposed`/`ready`/`submitted`/`closed`/`rejected`/`superseded`, but it no longer determines the index's primary grouping. Never copy summary, motivation, body, tasks, or acceptance criteria into the index. Create the index with the first SPEC and update it whenever a SPEC is created, renamed, changes status, scope, platform, or order, or is removed. The general memory `index` links to `specs-index`; it does not enumerate individual SPECs.
+Each entry contains only the SPEC id linked to its canonical document, title, platform, type, compatible status, approval, publication, implementation state, group, order, and updated date. These fields remain visible but do not determine the index's primary grouping. Never copy summary, motivation, body, tasks, acceptance criteria, or checkpoint evidence into the index. Create the index with the first SPEC and update it whenever a projected field changes. The general memory `index` links to `specs-index`; it does not enumerate individual SPECs.
 
 Reference other specs in `relations` by their `id`, so links stay valid before any issue exists. Resolve them to real issue numbers only when publishing, by looking up each referenced spec's `github.issue`.
 
@@ -202,29 +225,26 @@ Publishing a spec as a GitHub issue (or updating one already published) is **nev
 1. resolve `relations.parent`, `relations.children`, and `relations.related` against the `github.issue` of the referenced specs; flag any still unresolved instead of guessing;
 2. create or update the issue with `title`, `body`, `labels`, `assignees`, `milestone`;
 3. set the parent/children relationship through GitHub's native sub-issues feature; render `related` as a cross-reference list inside the issue body, since GitHub has no native non-hierarchical link type;
-4. write the resulting `github.issue` and `github.synced_at` back into the YAML file, move `status` to `submitted`, and move its entry to Published in `specs-index`;
+4. write `github.issue` and `github.synced_at`, set `publication: published`, preserve `approval: approved`, project the compatible `status: submitted`, and update the index;
 5. verify the real outcome by rereading the issue through the connector or API, and report which issues were created or updated, with links.
 
 This publishing step is a real, externally visible action — it is not covered by the automatic documentation updates in [Limits](#limits); treat it like any other action visible to others.
 
 ## Implementing specifications
 
-Implementing code from SPECs is never automatic. Start only on explicit request and only from `ready` SPECs. Keep implementation separate from the persistent-memory review flow: the configured backend defines how code branches, pull requests, and merges are handled.
+Implementing code from SPECs is never automatic. Start only on explicit request and only when `approval: approved`; compatible `ready` and `submitted` files both qualify. Keep each repository in an independent session.
 
-For a request covering multiple SPECs, use an orchestrator/worker model:
+Tasks and subtasks in the SPEC are the canonical functional plan. Do not duplicate them elsewhere. The `implementation` block is only a resumability checkpoint, owned by the orchestrator and updated in the active RepoDoc write mode after every meaningful step, not by the implementation worker on its code branch. It records at least branch, checkpoint commit, SPEC revision, checks and results tied to a commit, independent review, blocker, and PR/merge/tag references. Checkboxes alone are not evidence. `partial` means unfinished work, `verified` means implementation and review passed but target integration is not verified, and `completed` requires verified target integration.
 
-1. resolve the selected SPECs from `specs-index` and their canonical files;
-2. validate that every selected SPEC is `ready`, has scope, platform, group, and order, all referenced prerequisites exist, and the index sequence respects their dependencies;
-3. process groups in ascending order and complete integration of the whole current group before generating code for the next; within each group process SPECs by `delivery.order`, unless the user explicitly requests parallel work and the repository can provide isolated worktrees and non-overlapping integration paths;
-4. launch a fresh isolated implementation worker for each SPEC; the orchestrator coordinates but never writes implementation code itself;
-5. give the worker only one SPEC, its relevant source context, the target branch, and the requested integration policy;
-6. require the worker to implement, test, commit, and verify that SPEC without silently introducing decisions absent from the specification;
-7. independently verify the worker's reported branch, commits, tests, and integration result before starting the next SPEC;
-8. stop the train on the first unresolved decision, unrepairable verification failure, or incomplete integration, unless the user explicitly authorizes skipping that SPEC.
+Before changing code, compare the SPEC with existing implementation and tests and classify it as absent, partial, satisfied, or ambiguous. Implement only gaps. Already-satisfied work receives evidence and required checks without artificial changes or commits. On resume, reconcile the SPEC revision, checkpoint, code, local and remote Git/PR/tag state; reuse matching evidence and repeat checks invalidated by later changes. This makes interruption between merge, tag, and memory update idempotent.
 
-Every worker invocation must start with a fresh context. Never reuse one implementation worker across multiple SPECs and never fall back to inline implementation when isolated delegation is required but unavailable.
+For multiple SPECs, resolve and order them by mandatory `depends_on`, then `delivery.group` and `delivery.order`; stop on missing dependencies, cycles, contradictions, or ambiguity. Process one at a time from the updated target and stop at the first blocker. Use a dedicated branch and a fresh isolated implementation worker for each SPEC. Then launch a different fresh `repodoc-review-spec-worker` for the exact reviewed commit. The reviewer is read-only and checks acceptance coverage, correctness/regressions, architecture/dependency boundaries, tests, and unrelated changes, returning blocking findings, observations, and verifiable references.
 
-The default integration policy is `pull-request`: a dedicated branch plus pull request with no automatic merge. `direct-merge` into a shared target branch is allowed only when the current user request explicitly authorizes it. Never discard unrelated local changes, overwrite another worker's branch, or treat command success as proof: reread the resulting repository and hosting state.
+Blocking findings return to the implementer; affected checks run again and every changed commit receives a new independent review. The review-cycle limit is configurable and defaults to 3. At the limit preserve the branch and checkpoint and report the blocker.
+
+The default integration policy is `pull-request` (pull request): open/update a dedicated PR and do not merge. `direct-merge` is allowed only when the request explicitly authorizes it; selection-wide authorization applies to every selected SPEC without repeated prompts. Do not globally change the default target: use `develop` only when requested or conventional. Before pushing a target that triggers deployment, obtain any additional authorization required by repository policy.
+
+After a passing review, preserve the SPEC boundary in history, preferring a merge commit unless conventions differ. Verify required checks on the integrated target, push and verify the remote merge, then create and push an annotated completion tag on the resulting commit. Use repository naming, otherwise `spec/<lowercase-spec-id>/completed`. Never overwrite, move, force, or reuse an existing tag; verify it remotely. A completion tag identifies SPEC completion, not a release or deployment. Only then set `implementation.state: completed`, record merge/tag, set `closure.reason: completed` and compatible `status: closed`, and update the index. Never discard unrelated work or claim an end-to-end proof from static template checks.
 
 ## Consultation order
 

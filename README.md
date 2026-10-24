@@ -9,7 +9,7 @@ It gives AI assistants one versioned source of truth for established project kno
 - Italian and English versions of the memory protocol.
 - Project instructions for ChatGPT and Claude.
 - Repository instruction wrappers for Claude Code, Codex, and GitHub Copilot.
-- RepoDoc agents for Claude Code, Codex, and GitHub Copilot: guided project bootstrap, read-only installation diagnostics, consistency, open-point resolution, SPEC synthesis and expansion, plus an implementation orchestrator and isolated implementation worker. Proposed work is created directly as `SPEC-xxx-<title>.yaml` with `status: proposed`; ready SPECs can be implemented sequentially with a fresh worker per SPEC. See [Installed layout](#installed-layout) and [Using the RepoDoc agents](#using-the-repodoc-agents) below.
+- RepoDoc agents for Claude Code, Codex, and GitHub Copilot: guided bootstrap, diagnostics, consistency, SPEC workflows, plus an implementation orchestrator, isolated implementer, and independent read-only reviewer. Approved SPECs can be resumed and implemented sequentially with fresh workers per SPEC.
 - An interactive installer that places each file in the location expected by the selected tools.
 
 The language packages are under [`it/`](it/INSTALLATION.md) and [`en/`](en/INSTALLATION.md). Each `INSTALLATION.md` contains the complete source-to-target file mapping.
@@ -65,7 +65,7 @@ Selecting all tools produces:
 <target-repository>/
 ├── .claude/
 │   ├── CLAUDE.md
-│   ├── agents/                          # memory agents plus repodoc-implement-specs.md and repodoc-implement-spec-worker.md
+│   ├── agents/                          # memory agents plus implementation orchestrator, implementer, and reviewer
 │   └── skills/repodoc-spec-expand/SKILL.md
 ├── .codex/agents/                       # memory agents plus repodoc-implement-specs.toml and repodoc-implement-spec-worker.toml
 ├── .github/
@@ -97,26 +97,31 @@ Once installed, each agent is just a normal custom agent (or skill) for its tool
 | `repodoc-spec-expand` (skill) | you want to detail **one** draft or proposed SPEC | Enriches the existing YAML in place with scope, ordered tasks, atomic subtasks, acceptance criteria, and relations. Expansion does not imply approval. |
 | `repodoc-expand-specs` | you want to expand all or several draft/proposed SPECs in one pass | Processes the selected YAML files sequentially in the active write mode. On Claude Code it hands off each file to `repodoc-expand-spec-worker`; on Codex and Copilot it runs the same steps inline. |
 | `repodoc-expand-spec-worker` (Claude Code only) | never directly | Internal sub-agent that `repodoc-expand-specs` spawns once per SPEC via the Task tool, so each expansion starts from a clean context and they never run in parallel on the same branch. |
-| `repodoc-implement-specs` | you want to implement one or more ready SPECs | Validates and orders the selection, then launches a fresh isolated worker for each SPEC, one at a time. It coordinates and verifies but never writes implementation code. |
-| `repodoc-implement-spec-worker` | never directly | Implements exactly one assigned ready SPEC on a dedicated code branch, runs its acceptance and regression checks, pushes it, and opens a PR or performs an explicitly authorized direct merge. |
+| `repodoc-implement-specs` | you want to implement one or more approved SPECs | Reconciles existing work/checkpoints, orders dependencies, launches a fresh implementer and reviewer per SPEC, and coordinates verified integration and completion tags. |
+| `repodoc-implement-spec-worker` | never directly | Verifies and implements only missing scope for one SPEC on a dedicated branch; it does not merge, tag, review, or edit RepoDoc state. |
+| `repodoc-review-spec-worker` | never directly | Independently reviews one exact implementation commit read-only and returns structured blockers, observations, and evidence. |
 
-The SPEC lifecycle is `draft → proposed → ready → submitted → closed`, with `rejected` and `superseded` as terminal alternatives. A SPEC becomes `ready` only when it is sufficiently detailed and explicitly approved; adding detail alone leaves it `proposed`.
+The compatible SPEC status lifecycle remains `draft → proposed → ready → submitted → closed`, with `rejected` and `superseded` alternatives. RepoDoc 1.11 separates `approval`, `publication`, `implementation.state`, and `closure.reason`: publishing an approved SPEC does not make it non-executable, and only a verified integration is `completed`.
 
 `repodoc/specs/index.md` provides the overview that the old catalog used to provide without duplicating specification content. It lists every SPEC once, grouped first by global implementation group and then by scope and order. A group is an execution barrier: group 1 must be integrated before code generation starts for group 2. Lifecycle status remains visible on each entry; `repodoc/index.md` links to this specialized index.
 
 Multi-platform repositories keep `repodoc/ontology.md` as the canonical map from platform identifiers to project-name suffixes. Platform-specific projects use `<base-name>-<platform-suffix>`, and each SPEC references the canonical platform identifier.
 
-Implementation defaults to a dedicated branch plus an unmerged pull request. Direct merge is used only when the current request says so explicitly. In either mode, the next SPEC starts only after the previous one is integrated or explicitly skipped.
+Implementation defaults to a dedicated branch plus an unmerged pull request. Direct merge is used only when the current request says so explicitly; selection-wide authorization is not requested again per SPEC. Each verified integration receives an annotated completion tag, following repository naming or `spec/<spec-id>/completed`, without overwriting existing tags.
 
 ### Implementing a SPEC train
 
 Invoke `repodoc-implement-specs` with an explicit list or an unambiguous selector. Use SPEC `scope`, `delivery.group`, and `delivery.order` for the delivery sequence; labels and milestones remain optional classification metadata.
 
 ```text
-Implement the ready SPECs in scope rich-chat, following the index groups and order.
+Implement SPEC-001 through SPEC-005 sequentially. Use a fresh implementation worker and a fresh independent reviewer for each SPEC.
 Target branch: develop.
 Integration mode: direct-merge.
-Use a fresh isolated worker for every SPEC and stop on the first blocker.
+Run tests and review independently, fix findings, integrate each verified SPEC, and create an annotated completion tag. Stop on the first blocker.
 ```
 
 Omitting the last two settings uses the repository default branch and `pull-request` mode. The agent reads the canonical SPEC files, so the prompt never needs to copy their titles, paths, tasks, or acceptance criteria.
+
+## Upgrading existing installations to 1.11
+
+Re-run the installer and allow it to overwrite RepoDoc-owned agent/protocol files while preserving managed wrapper content. Existing SPECs remain compatible. Migrate them incrementally: add `approval` and `publication`; add `depends_on: []` without copying `relations.related`; initialize the `implementation` checkpoint; and add `closure.reason` only when the historical reason is known. Deterministic mappings are `ready` → approved/unpublished and `submitted` → approved/published. Do not guess why an older `closed` SPEC was closed.

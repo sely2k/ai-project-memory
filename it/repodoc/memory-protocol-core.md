@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.10.0 -->
+<!-- repodoc:version 1.11.0 -->
 
 # Protocollo di memoria persistente
 
@@ -156,6 +156,8 @@ A differenza degli altri tipi di documento, una specifica è YAML puro, non Mark
 id: SPEC-014
 title: Support multi-backend export
 status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
+approval: pending       # pending | approved
+publication: unpublished # unpublished | published
 type: feature            # feature | bug | task | chore
 scope: catalog            # ambito funzionale o tecnico canonico
 platform: web             # identificatore definito nell'ontologia del progetto
@@ -172,6 +174,7 @@ motivation: |
 sources:
   - ../decisions/ADR-003-multi-backend.md
 body: null               # può essere null per draft/proposed; obbligatorio e completo per ready+
+depends_on: []           # id delle SPEC prerequisito obbligatorie; non link informativi
 relations:
   parent: null            # SPEC-xxx, corrisponde al parent sub-issue di GitHub
   children: []             # elenco di SPEC-xxx, corrisponde ai sub-issue di GitHub
@@ -179,6 +182,22 @@ relations:
 github:
   issue: null              # owner/repo#123, valorizzato quando la issue esiste
   synced_at: null
+implementation:
+  state: not_started     # not_started | partial | verified | completed | blocked
+  branch: null
+  checkpoint_commit: null
+  spec_revision: null    # blob/hash immutabile o commit del contenuto SPEC revisionato
+  checks: []             # comando, commit, esito e riferimento opzionale all'evidenza
+  review: null           # revisore, head_commit, verdetto, ciclo, riferimento ai findings
+  blocker: null
+  integration:
+    target: null
+    pull_request: null
+    merge_commit: null
+    tag: null
+closure:
+  reason: null           # completed | cancelled | duplicate | obsolete | other
+  note: null
 updated: ...
 ```
 
@@ -187,12 +206,16 @@ Usa gli stati in modo coerente:
 * `draft`: il file è in fase di stesura e non è ancora abbastanza coerente per una revisione;
 * `proposed`: il lavoro è una proposta revisionabile, ma non è ancora stato approvato come pronto per l'implementazione;
 * `ready`: la proposta è approvata e scope, attività, dipendenze e criteri di accettazione sono sufficientemente completi per implementarla;
-* `submitted`: la specifica è stata pubblicata come issue GitHub;
-* `closed`: il lavoro è stato completato o comunque chiuso;
+* `submitted`: stato di compatibilità per una SPEC approvata e pubblicata come issue GitHub; resta eseguibile;
+* `closed`: il lavoro non è più attivo; `closure.reason` distingue completamento, annullamento, duplicazione, obsolescenza o altro motivo;
 * `rejected`: la proposta è stata valutata e rifiutata;
 * `superseded`: un'altra SPEC ha sostituito questa; indica la sostituta in `relations.related`.
 
 Il passaggio di una SPEC a `ready` richiede sia dettaglio sufficiente sia approvazione esplicita nella richiesta dell'utente o nella documentazione consolidata del progetto. Espandere una SPEC non implica di per sé approvarla: mantienila `proposed` quando è dettagliata ma ancora in attesa di decisione.
+
+Approvazione, pubblicazione, esecuzione e chiusura sono dimensioni separate. I file nuovi o migrati registrano `approval` e `publication` esplicitamente, conservando `status` per compatibilità: `ready` significa approvata/non pubblicata e `submitted` approvata/pubblicata. Entrambe sono implementabili. La pubblicazione modifica soltanto `publication`, i metadati GitHub e la proiezione compatibile dello stato; non revoca mai l'approvazione. `implementation.state` traccia la consegna e `closed` richiede `closure.reason`; soltanto `closure.reason: completed` prova il completamento. Nella migrazione inferisci solo valori deterministici (`ready` -> approved/unpublished, `submitted` -> approved/published) e lascia le chiusure ambigue da revisionare.
+
+`depends_on` contiene soltanto id di SPEC prerequisito obbligatorie. `relations.related` resta un riferimento informativo e non va mai promosso automaticamente. Le dipendenze devono risolversi, non contenere auto-riferimenti o cicli ed essere coerenti con `delivery.group` e `delivery.order`: un prerequisito non può essere pianificato dopo la SPEC dipendente. Una contraddizione blocca readiness o implementazione.
 
 Mantieni un solo `specs-index` nel percorso definito dal backend configurato. È una proiezione di navigazione e sequenziamento, non un'altra fonte del contenuto delle specifiche. Organizza ogni SPEC una sola volta con questa gerarchia:
 
@@ -202,7 +225,7 @@ Mantieni un solo `specs-index` nel percorso definito dal backend configurato. È
 
 Il gruppo è una barriera di esecuzione globale: tutte le SPEC ready selezionate del gruppo 1, qualunque sia il loro ambito, devono essere implementate e integrate prima di generare codice per il gruppo 2, e così via. Le SPEC dello stesso gruppo restano sequenziali salvo richiesta esplicita di parallelismo e compatibilità delle dipendenze. `delivery.group` e `delivery.order` devono essere interi positivi e la coppia deve essere univoca nell'intero indice; dipendenze dichiarate e ordine di consegna non possono contraddirsi. Le SPEC non ancora pianificabili possono usare valori `null` e vanno nella sezione finale **Non pianificate**, raggruppate per ambito; non possono passare a `ready` finché ambito, piattaforma, gruppo e ordine non sono definiti.
 
-Ogni voce contiene soltanto l'id della SPEC collegato al documento canonico, titolo, piattaforma, tipo, stato, gruppo, ordine e data di aggiornamento. Lo stato resta visibile e usa il ciclo `draft`/`proposed`/`ready`/`submitted`/`closed`/`rejected`/`superseded`, ma non determina più il raggruppamento principale. Non copiare mai nell'indice sintesi, motivazione, body, attività o criteri di accettazione. Crea l'indice insieme alla prima SPEC e aggiornalo ogni volta che una SPEC viene creata, rinominata, cambia stato, ambito, piattaforma o ordine, oppure viene rimossa. L'`index` generale della memoria collega `specs-index`; non elenca le singole SPEC.
+Ogni voce contiene soltanto l'id collegato al documento canonico, titolo, piattaforma, tipo, stato compatibile, approvazione, pubblicazione, stato implementativo, gruppo, ordine e data. Questi campi restano visibili ma non determinano il raggruppamento principale. Non copiare sintesi, motivazione, body, attività, criteri o evidenze di checkpoint. Aggiorna l'indice quando cambia un campo proiettato. L'`index` generale collega `specs-index`; non elenca le singole SPEC.
 
 Fai riferimento alle altre specifiche in `relations` tramite il loro `id`, così i collegamenti restano validi prima che esista una issue. Risolvili in numeri di issue reali solo al momento della pubblicazione, leggendo il `github.issue` di ciascuna specifica referenziata.
 
@@ -211,29 +234,26 @@ Pubblicare una specifica come issue GitHub (o aggiornarne una già pubblicata) *
 1. risolvi `relations.parent`, `relations.children` e `relations.related` rispetto al `github.issue` delle specifiche referenziate; segnala quelli ancora irrisolti invece di indovinare;
 2. crea o aggiorna la issue con `title`, `body`, `labels`, `assignees`, `milestone`;
 3. imposta la relazione parent/children tramite la funzionalità nativa dei sub-issue di GitHub; rendi `related` come elenco di riferimenti incrociati nel corpo della issue, dato che GitHub non ha un tipo di collegamento non gerarchico nativo;
-4. scrivi `github.issue` e `github.synced_at` nel file YAML, porta `status` a `submitted` e sposta la relativa voce in Pubblicate nello `specs-index`;
+4. scrivi `github.issue` e `github.synced_at`, imposta `publication: published`, conserva `approval: approved`, proietta `status: submitted` e aggiorna l'indice;
 5. verifica l'esito reale rileggendo la issue tramite il connector o l'API, e riporta quali issue sono state create o aggiornate, con i relativi link.
 
 Questo passo di pubblicazione è un'azione reale e visibile ad altri: non rientra negli aggiornamenti automatici della documentazione descritti in [Limiti](#limiti); trattalo come qualsiasi altra azione visibile ad altri.
 
 ## Implementazione delle specifiche
 
-L'implementazione di codice a partire dalle SPEC non è mai automatica. Iniziala soltanto su richiesta esplicita e soltanto da SPEC `ready`. Mantieni l'implementazione separata dal flusso di revisione della memoria persistente: il backend configurato definisce come gestire branch di codice, pull request e merge.
+L'implementazione di codice da SPEC non è mai automatica. Iniziala solo su richiesta esplicita e con `approval: approved`; i file compatibili `ready` e `submitted` sono entrambi idonei. Mantieni ogni repository in una sessione indipendente.
 
-Per una richiesta che comprende più SPEC, usa un modello orchestratore/worker:
+Task e sottotask della SPEC sono il piano funzionale canonico: non duplicarli altrove. Il blocco `implementation` è soltanto un checkpoint di ripresa, di responsabilità dell'orchestratore e aggiornato nella modalità RepoDoc attiva dopo ogni passo significativo, non dal worker nel branch di codice. Registra almeno branch, commit di checkpoint, revisione SPEC, controlli ed esiti legati a un commit, revisione indipendente, blocco e riferimenti PR/merge/tag. Le checkbox non sono prove. `partial` indica lavoro incompleto, `verified` implementazione e revisione positive ma integrazione non verificata, `completed` richiede integrazione verificata.
 
-1. risolvi le SPEC selezionate dallo `specs-index` e dai relativi file canonici;
-2. verifica che ogni SPEC selezionata sia `ready`, abbia ambito, piattaforma, gruppo e ordine, che tutti i prerequisiti referenziati esistano e che la sequenza dell'indice rispetti le dipendenze;
-3. processa i gruppi in ordine crescente e completa l'integrazione dell'intero gruppo corrente prima di generare codice per il successivo; dentro ciascun gruppo processa le SPEC per `delivery.order`, salvo richiesta esplicita di lavoro parallelo e disponibilità nella repository di worktree isolati e percorsi di integrazione non sovrapposti;
-4. avvia un worker di implementazione nuovo e isolato per ogni SPEC; l'orchestratore coordina ma non scrive mai direttamente il codice implementativo;
-5. passa al worker una sola SPEC, il relativo contesto di origine, il branch target e la policy di integrazione richiesta;
-6. imponi al worker di implementare, testare, committare e verificare quella SPEC senza introdurre silenziosamente decisioni assenti dalla specifica;
-7. verifica indipendentemente branch, commit, test ed esito dell'integrazione riportati dal worker prima di avviare la SPEC successiva;
-8. ferma il treno alla prima decisione irrisolta, verifica non riparabile o integrazione incompleta, salvo autorizzazione esplicita dell'utente a saltare quella SPEC.
+Prima di cambiare codice confronta SPEC, implementazione e test e classifica il lavoro come assente, parziale, soddisfatto o ambiguo. Implementa solo le lacune. Per lavoro già soddisfatto raccogli evidenze ed esegui i controlli senza modifiche o commit artificiali. Alla ripresa riconcilia revisione SPEC, checkpoint, codice e stato Git/PR/tag locale e remoto; riusa evidenze coincidenti e ripeti i controlli invalidati. Così le interruzioni tra merge, tag e memoria sono idempotenti.
 
-Ogni invocazione del worker deve partire con un contesto nuovo. Non riutilizzare mai lo stesso worker di implementazione per più SPEC e non ripiegare sull'implementazione inline quando è richiesta la delega isolata ma non è disponibile.
+Per più SPEC, ordinale prima per `depends_on` obbligatorio, poi `delivery.group` e `delivery.order`; fermati per dipendenze mancanti, cicli, contraddizioni o ambiguità. Processa una SPEC alla volta dal target aggiornato e fermati al primo blocco. Usa branch dedicato e worker implementativo nuovo e isolato. Poi avvia un diverso `repodoc-review-spec-worker` nuovo per il commit esatto. Il revisore è in sola lettura e controlla criteri, correttezza/regressioni, architettura/dipendenze, test e modifiche estranee, restituendo problemi bloccanti, osservazioni e riferimenti verificabili.
 
-La policy di integrazione predefinita è `pull-request`: branch dedicato più pull request senza merge automatico. `direct-merge` in un branch target condiviso è consentito soltanto quando la richiesta corrente dell'utente lo autorizza esplicitamente. Non eliminare modifiche locali estranee, non sovrascrivere il branch di un altro worker e non considerare il successo di un comando come prova: rileggi lo stato risultante della repository e dell'hosting.
+I problemi bloccanti tornano all'implementatore; riesegui i controlli interessati e richiedi una nuova revisione per ogni commit cambiato. Il limite dei cicli è configurabile e vale 3 per default. Al limite conserva branch e checkpoint e segnala il blocco.
+
+La policy predefinita è `pull-request` (pull request): apri/aggiorna una PR dedicata e non integrarla. `direct-merge` è consentito solo quando la richiesta lo autorizza; l'autorizzazione per una selezione vale per tutte le SPEC selezionate. Non cambiare globalmente il target predefinito: usa `develop` solo se richiesto o convenzionale. Prima di pubblicare su un target che attiva deployment, ottieni ogni autorizzazione aggiuntiva richiesta.
+
+Dopo una revisione positiva conserva il confine della SPEC nella storia, preferendo merge commit salvo convenzioni diverse. Verifica i controlli sul target integrato, pubblica e verifica il merge remoto, poi crea e pubblica un tag annotato sul commit risultante. Usa il naming della repository, altrimenti `spec/<spec-id-minuscolo>/completed`. Non sovrascrivere, spostare, forzare o riusare tag; verificalo sul remoto. Il tag identifica il completamento della SPEC, non una release o un deployment. Solo allora imposta `implementation.state: completed`, registra merge/tag, `closure.reason: completed`, lo `status: closed` compatibile e aggiorna l'indice. Non scartare lavoro estraneo né dichiarare E2E sulla base di soli controlli statici.
 
 ## Consultazione
 

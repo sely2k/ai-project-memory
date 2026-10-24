@@ -18,6 +18,9 @@ Enumera tutti i documenti gestiti da RepoDoc secondo i percorsi del backend conf
 
 Per ciascun documento e tra documenti, controlla:
 
+- coerenza tra stato/approvazione/pubblicazione, eseguibilità delle SPEC `submitted` approvate, motivi di chiusura e checkpoint confrontati con Git;
+- risoluzione, cicli, auto-riferimenti e ordine di `depends_on` obbligatorio, separato da `relations.related` informativo che non va promosso automaticamente;
+
 - **Link rotti**: collegamenti relativi verso file rinominati, spostati o rimossi.
 - **Riferimenti incrociati non reciproci**: un `Related` che dovrebbe puntare indietro e non lo fa.
 - **Stati incoerenti**: un `OPEN-xxx` `resolved` senza ADR corrispondente quando serve; un ADR che risolve un OPEN ancora `open`; una `SPEC-xxx` `submitted` senza `github.issue` coerente.

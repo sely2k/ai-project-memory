@@ -21,10 +21,10 @@ Per ciascun documento e tra documenti, controlla:
 - **Riferimenti incrociati non reciproci**: un `Related` che punta a un documento che dovrebbe referenziare indietro (es. un ADR che risolve un REQ ma il REQ non lo elenca in `Related`).
 - **Stati incoerenti**: un `OPEN-xxx` marcato `resolved` senza un ADR corrispondente quando la risoluzione è chiaramente una decisione significativa; un ADR che dichiara di risolvere un OPEN ancora `open`; una `SPEC-xxx` con `status: submitted` ma `github.issue: null` (o viceversa).
 - **Duplicazione della fonte di verità**: la stessa informazione consolidata descritta in modo divergente in più documenti, incluso lavoro proposto copiato in un elenco feature informale invece di vivere soltanto nel proprio file `SPEC-xxx-<title>.yaml`.
-- **Ciclo di vita SPEC non valido**: stati non supportati; una SPEC `ready` senza dettaglio implementativo completo e approvazione esplicita; una SPEC `submitted` senza `github.issue`; una SPEC rejected o superseded ancora trattata come lavoro attivo.
+- **Ciclo di vita SPEC non valido**: stato/approvazione/pubblicazione contraddittori; SPEC `submitted` approvata trattata come non eseguibile; `closed` senza motivo; checkpoint privo di evidenza Git; lavoro rejected/superseded trattato come attivo.
 - **Terminologia incoerente** rispetto a `repodoc/glossary.md`, se esiste.
 - **Indici disallineati**: voci mancanti o stantie in `repodoc/index.md`; collegamento mancante da questo a `repodoc/specs/index.md`; una SPEC assente dall'indice specializzato, elencata più volte o collocata in una sezione non coerente con il proprio stato YAML.
-- **Relazioni `SPEC` non risolvibili**: `relations.parent`/`children`/`related` che puntano a `SPEC-xxx` non più esistenti.
+- **Dipendenze o relazioni SPEC non valide**: `depends_on` mancante, ciclico, autoreferenziale o incompatibile con l'ordine; relazioni irrisolte; promozione immotivata di `relations.related`.
 - **Metadati mancanti o stantii**: `status`, `updated`, `related` assenti dove richiesti dal protocollo, o `updated` palesemente più vecchio dell'ultima modifica sostanziale rilevabile da git.
 - **Naming non conforme** ai percorsi e alle convenzioni del backend configurato.
 

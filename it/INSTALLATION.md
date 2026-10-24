@@ -32,6 +32,7 @@ Oltre al file di istruzioni base, per ciascuno strumento selezionato l'installer
 | Claude Code | `it/claude-code/agents/expand-spec-worker.md` | `.claude/agents/repodoc-expand-spec-worker.md` |
 | Claude Code | `it/claude-code/agents/implement-specs.md` | `.claude/agents/repodoc-implement-specs.md` |
 | Claude Code | `it/claude-code/agents/implement-spec-worker.md` | `.claude/agents/repodoc-implement-spec-worker.md` |
+| Claude Code | `it/claude-code/agents/review-spec-worker.md` | `.claude/agents/repodoc-review-spec-worker.md` |
 | Claude Code | `it/skills/spec-expand/SKILL.md` | `.claude/skills/repodoc-spec-expand/SKILL.md` |
 | OpenAI Codex CLI | `it/codex/agents/bootstrap.toml` | `.codex/agents/repodoc-bootstrap.toml` |
 | OpenAI Codex CLI | `it/codex/agents/doctor.toml` | `.codex/agents/repodoc-doctor.toml` |
@@ -41,6 +42,7 @@ Oltre al file di istruzioni base, per ciascuno strumento selezionato l'installer
 | OpenAI Codex CLI | `it/codex/agents/expand-specs.toml` | `.codex/agents/repodoc-expand-specs.toml` |
 | OpenAI Codex CLI | `it/codex/agents/implement-specs.toml` | `.codex/agents/repodoc-implement-specs.toml` |
 | OpenAI Codex CLI | `it/codex/agents/implement-spec-worker.toml` | `.codex/agents/repodoc-implement-spec-worker.toml` |
+| OpenAI Codex CLI | `it/codex/agents/review-spec-worker.toml` | `.codex/agents/repodoc-review-spec-worker.toml` |
 | OpenAI Codex CLI | `it/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` |
 | GitHub Copilot | `it/copilot/agents/bootstrap.agent.md` | `.github/agents/repodoc-bootstrap.agent.md` |
 | GitHub Copilot | `it/copilot/agents/doctor.agent.md` | `.github/agents/repodoc-doctor.agent.md` |
@@ -50,6 +52,7 @@ Oltre al file di istruzioni base, per ciascuno strumento selezionato l'installer
 | GitHub Copilot | `it/copilot/agents/expand-specs.agent.md` | `.github/agents/repodoc-expand-specs.agent.md` |
 | GitHub Copilot | `it/copilot/agents/implement-specs.agent.md` | `.github/agents/repodoc-implement-specs.agent.md` |
 | GitHub Copilot | `it/copilot/agents/implement-spec-worker.agent.md` | `.github/agents/repodoc-implement-spec-worker.agent.md` |
+| GitHub Copilot | `it/copilot/agents/review-spec-worker.agent.md` | `.github/agents/repodoc-review-spec-worker.agent.md` |
 | GitHub Copilot | `it/skills/spec-expand/SKILL.md` | `.agents/skills/repodoc-spec-expand/SKILL.md` (se non già scritto da Codex) |
 
 La skill `repodoc-spec-expand` è un unico contenuto sorgente, copiato nel percorso di scoperta nativo di ciascuno strumento selezionato: `.claude/skills/` per Claude Code, `.agents/skills/` per Codex e Copilot CLI (che lo condividono). Se sia Codex sia Copilot sono selezionati, il file viene scritto una sola volta.
@@ -69,7 +72,8 @@ La skill `repodoc-spec-expand` è un unico contenuto sorgente, copiato nel perco
 │   │   ├── repodoc-expand-specs.md
 │   │   ├── repodoc-expand-spec-worker.md
 │   │   ├── repodoc-implement-specs.md
-│   │   └── repodoc-implement-spec-worker.md
+│   │   ├── repodoc-implement-spec-worker.md
+│   │   └── repodoc-review-spec-worker.md
 │   └── skills/
 │       └── repodoc-spec-expand/SKILL.md
 ├── .codex/
@@ -81,7 +85,8 @@ La skill `repodoc-spec-expand` è un unico contenuto sorgente, copiato nel perco
 │       ├── repodoc-synthesize-specs.toml
 │       ├── repodoc-expand-specs.toml
 │       ├── repodoc-implement-specs.toml
-│       └── repodoc-implement-spec-worker.toml
+│       ├── repodoc-implement-spec-worker.toml
+│       └── repodoc-review-spec-worker.toml
 ├── .github/
 │   ├── copilot-instructions.md
 │   └── agents/
@@ -92,7 +97,8 @@ La skill `repodoc-spec-expand` è un unico contenuto sorgente, copiato nel perco
 │       ├── repodoc-synthesize-specs.agent.md
 │       ├── repodoc-expand-specs.agent.md
 │       ├── repodoc-implement-specs.agent.md
-│       └── repodoc-implement-spec-worker.agent.md
+│       ├── repodoc-implement-spec-worker.agent.md
+│       └── repodoc-review-spec-worker.agent.md
 ├── .agents/
 │   └── skills/
 │       └── repodoc-spec-expand/SKILL.md
@@ -130,3 +136,7 @@ cp it/claude/instruction.md <repository-target>/repodoc/claude-chat-instruction.
 - Codex carica `AGENTS.md` dalla root e può applicare file aggiuntivi nelle sottodirectory.
 - Copilot usa `.github/copilot-instructions.md` per le istruzioni valide in tutto il repository. Le regole mirate possono essere aggiunte in `.github/instructions/*.instructions.md`.
 - I file generati per ChatGPT Project e Claude Project sono copie pronte da incollare nelle rispettive interfacce; le applicazioni non li leggono direttamente dal repository. Risiedono sotto `repodoc/` apposta, così Codex CLI, GitHub Copilot e Claude Code non rischiano di leggerli e interpretarli come istruzioni: questi strumenti leggono solo, rispettivamente, `AGENTS.md`, `.github/copilot-instructions.md` e `CLAUDE.md`/`.claude/CLAUDE.md`.
+
+## Note di aggiornamento alla 1.11
+
+Riesegui l'installer e sovrascrivi i file di protocollo e agenti gestiti da RepoDoc; il contenuto dei wrapper viene preservato. Le SPEC esistenti restano leggibili. Migrale gradualmente con `approval`, `publication`, `depends_on`, `implementation` e `closure`: mappa `ready` ad approved/unpublished e `submitted` ad approved/published, non copiare `relations.related` in `depends_on` e non inventare il motivo di una SPEC legacy `closed`.
