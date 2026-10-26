@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.12.0 -->
+<!-- repodoc:version 1.13.0 -->
 
 # Protocollo di memoria persistente
 
@@ -155,7 +155,7 @@ A differenza degli altri tipi di documento, una specifica è YAML puro, non Mark
 ```yaml
 id: SPEC-014
 title: Support multi-backend export
-status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
+status: proposed        # draft | proposed | ready | submitted | closed | needs-review | rejected | superseded
 approval: pending       # pending | approved
 publication: unpublished # unpublished | published
 type: feature            # feature | bug | task | chore
@@ -208,6 +208,7 @@ Usa gli stati in modo coerente:
 * `ready`: la proposta è approvata e scope, attività, dipendenze e criteri di accettazione sono sufficientemente completi per implementarla;
 * `submitted`: stato di compatibilità per una SPEC approvata e pubblicata come issue GitHub; resta eseguibile;
 * `closed`: il lavoro non è più attivo; `closure.reason` distingue completamento, annullamento, duplicazione, obsolescenza o altro motivo;
+* `needs-review` (da rivedere): il codice è cambiato fuori dal flusso implementativo revisionato in un modo che riguarda questa SPEC, quindi non è più attendibile come `closed` finché non viene riverificata; è anche lo stato iniziale di una SPEC scritta per documentare codice che esiste già;
 * `rejected`: la proposta è stata valutata e rifiutata;
 * `superseded`: un'altra SPEC ha sostituito questa; indica la sostituta in `relations.related`.
 
@@ -268,6 +269,17 @@ I problemi bloccanti tornano all'implementatore della SPEC interessata; riesegui
 La policy predefinita è `pull-request` (pull request): apri/aggiorna una PR dedicata e non integrarla. `direct-merge` è consentito solo quando la richiesta lo autorizza; l'autorizzazione per una selezione vale per tutte le SPEC selezionate. Non cambiare globalmente il target predefinito: usa `develop` solo se richiesto o convenzionale. Prima di pubblicare su un target che attiva deployment, ottieni ogni autorizzazione aggiuntiva richiesta.
 
 Dopo una revisione positiva conserva il confine della SPEC nella storia, preferendo merge commit salvo convenzioni diverse. Verifica i controlli sul target integrato, pubblica e verifica il merge remoto, poi crea e pubblica un tag annotato sul commit risultante. Usa il naming della repository, altrimenti `spec/<spec-id-minuscolo>/completed`. Non sovrascrivere, spostare, forzare o riusare tag; verificalo sul remoto. Il tag identifica il completamento della SPEC, non una release o un deployment. Solo allora imposta `implementation.state: completed`, registra merge/tag, `closure.reason: completed`, lo `status: closed` compatibile e aggiorna l'indice. Non scartare lavoro estraneo né dichiarare E2E sulla base di soli controlli statici.
+
+## Modifiche al codice fuori dal workflow SPEC
+
+Il codice può cambiare direttamente, senza passare da `repodoc-implement-specs` ("vibe coding") — RepoDoc non richiede che ogni modifica parta da una SPEC. Ma una modifica diretta deve restare comunque coerente con le SPEC che già descrivono quell'area di codice, quindi verificalo prima di considerare la modifica conclusa, indipendentemente da quale assistente o workflow l'abbia fatta:
+
+1. Identifica se la modifica ricade nello `scope` di una SPEC esistente, per percorsi di file, task nominati o chiara sovrapposizione tematica.
+2. Se sì, e lo `status` compatibile di quella SPEC è `closed`: riportala a `needs-review` e imposta `implementation.state: partial`. La modifica diretta ha invalidato quanto la SPEC registrava come implementato e verificato; conserva la sua storia di merge/tag, ma non è più attendibile come `closed` finché non viene riverificata.
+3. Se la modifica introduce lavoro nuovo, che meriterebbe una SPEC, senza che ne esista alcuna: creala, ma salta `draft`, `proposed` e `ready` — parti direttamente da `needs-review`. Il codice esiste già; ciò che manca è la verifica, non un piano.
+4. Fermati a `needs-review`. Non eseguire tu stesso la revisione in questo passo, e non lasciare una SPEC `closed` quando sai che il suo codice non corrisponde più a quanto registrato. `needs-review` rende solo la SPEC eleggibile per la revisione; eseguirne una (ad esempio un passaggio di `repodoc-review-spec-worker`) è un passo separato ed esplicito.
+
+`needs-review` è uno stato SPEC come gli altri: appartiene a `repodoc/specs/index.md`, e sia `repodoc-consistency-check` sia `repodoc-doctor` lo segnalano invece di ignorarlo.
 
 ## Consultazione
 

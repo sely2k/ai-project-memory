@@ -25,7 +25,7 @@ For each document and across documents, check:
 - **Non-reciprocal cross-references**: a `Related` entry that should point back and does not.
 - **Inconsistent status**: an `OPEN-xxx` `resolved` without a corresponding ADR when needed; an ADR resolving an OPEN still `open`; a `SPEC-xxx` `submitted` without a consistent `github.issue`.
 - **Duplicated source of truth**: the same information described divergently in multiple documents, including proposed work copied into an informal feature list instead of living only in its SPEC file.
-- **Invalid SPEC lifecycle**: unsupported statuses; `ready` without complete detail and explicit approval; `submitted` without `github.issue`; rejected or superseded work still treated as active.
+- **Invalid SPEC lifecycle**: unsupported statuses; `ready` without complete detail and explicit approval; `submitted` without `github.issue`; rejected or superseded work still treated as active; a `closed` SPEC whose code changed outside the reviewed implementation flow after closure (a direct/"vibe coded" change, not a `repodoc-implement-specs` run) — treat this as an unambiguous fix: set it to `needs-review` and `implementation.state: partial` rather than leaving it `closed`.
 - **Inconsistent terminology** against `repodoc/glossary.md`, if it exists.
 - **Misaligned indexes and planning**: the specialized index is not linked, or a SPEC is missing, duplicated, stale, under the wrong scope/group/order, in a duplicate position, or ordered against its dependencies.
 - **Invalid platform naming**: a SPEC platform is absent from `repodoc/ontology.md`, suffix mappings collide, or a platform-specific project name omits its mapped suffix.

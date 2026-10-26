@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.12.0 -->
+<!-- repodoc:version 1.13.0 -->
 
 # Persistent memory protocol
 
@@ -146,7 +146,7 @@ Unlike other document types, a spec is plain YAML, not Markdown with front matte
 ```yaml
 id: SPEC-014
 title: Support multi-backend export
-status: proposed        # draft | proposed | ready | submitted | closed | rejected | superseded
+status: proposed        # draft | proposed | ready | submitted | closed | needs-review | rejected | superseded
 approval: pending       # pending | approved
 publication: unpublished # unpublished | published
 type: feature            # feature | bug | task | chore
@@ -199,6 +199,7 @@ Use statuses consistently:
 * `ready`: the proposal is approved and the scope, tasks, dependencies, and acceptance criteria are complete enough to implement;
 * `submitted`: compatibility status for an approved spec published as a GitHub issue; it remains executable;
 * `closed`: the work is no longer active; `closure.reason` distinguishes completed work from cancellation, duplication, obsolescence, or another reason;
+* `needs-review`: code changed outside the reviewed implementation flow in a way that affects this SPEC, so it can no longer be trusted as `closed` until re-verified; also the initial status for a SPEC written to document code that already exists;
 * `rejected`: the proposal was considered and declined;
 * `superseded`: another SPEC replaced this one; reference the replacement in `relations.related`.
 
@@ -259,6 +260,17 @@ Blocking findings return to the implementer of the affected SPEC; affected check
 The default integration policy is `pull-request` (pull request): open/update a dedicated PR and do not merge. `direct-merge` is allowed only when the request explicitly authorizes it; selection-wide authorization applies to every selected SPEC without repeated prompts. Do not globally change the default target: use `develop` only when requested or conventional. Before pushing a target that triggers deployment, obtain any additional authorization required by repository policy.
 
 After a passing review, preserve the SPEC boundary in history, preferring a merge commit unless conventions differ. Verify required checks on the integrated target, push and verify the remote merge, then create and push an annotated completion tag on the resulting commit. Use repository naming, otherwise `spec/<lowercase-spec-id>/completed`. Never overwrite, move, force, or reuse an existing tag; verify it remotely. A completion tag identifies SPEC completion, not a release or deployment. Only then set `implementation.state: completed`, record merge/tag, set `closure.reason: completed` and compatible `status: closed`, and update the index. Never discard unrelated work or claim an end-to-end proof from static template checks.
+
+## Code changes outside the SPEC workflow
+
+Code can change directly, without going through `repodoc-implement-specs` ("vibe coding") — RepoDoc never requires every change to start from a SPEC. But a direct change still has to stay consistent with whatever SPECs already describe that area of the code, so check this before treating the change as done, regardless of which assistant or workflow made it:
+
+1. Identify whether the change falls within the `scope` of an existing SPEC, by file paths, named tasks, or clear topical overlap.
+2. If it does, and that SPEC's compatible `status` is `closed`: move it back to `needs-review` and set `implementation.state: partial`. The direct change invalidated what the SPEC recorded as implemented and verified; keep its merge/tag history, but it can no longer be trusted as `closed` until it is re-verified.
+3. If the change introduces new, SPEC-worthy work with no existing SPEC at all: create one, but skip `draft`, `proposed`, and `ready` — start it directly at `needs-review`. The code already exists; what is missing is verification, not a plan.
+4. Stop at `needs-review`. Do not review the change yourself in this step, and do not leave a SPEC `closed` once you know its code no longer matches what was recorded. `needs-review` only makes the SPEC eligible for review; running one against it (for example a `repodoc-review-spec-worker` pass) is a separate, explicit step.
+
+`needs-review` is a SPEC status like any other: it belongs in `repodoc/specs/index.md`, and `repodoc-consistency-check` and `repodoc-doctor` both report it instead of ignoring it.
 
 ## Consultation order
 

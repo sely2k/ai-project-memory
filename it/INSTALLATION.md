@@ -144,3 +144,7 @@ Riesegui l'installer e sovrascrivi i file di protocollo e agenti gestiti da Repo
 ## Note di aggiornamento alla 1.12
 
 Riesegui l'installer per aggiungere il nuovo agente `repodoc-scout-spec-worker` e aggiornare `repodoc-implement-specs`, `repodoc-implement-spec-worker` e `repodoc-review-spec-worker`. Nessuna migrazione dei file SPEC è richiesta: l'implementazione ora raggruppa le SPEC selezionate in un batch (`BATCH_ID`), lo pianifica una sola volta con un piano revisionabile in `repodoc/plans/<BATCH_ID>.md` su `feature/batch-<BATCH_ID>`, e lo revisiona una sola volta su `review/batch-<BATCH_ID>` prima dell'integrazione per SPEC. Mantieni le SPEC piccole; scomponi a mano quelle troppo grandi in SPEC genitore/figlie prima di implementarle.
+
+## Note di aggiornamento alla 1.13
+
+Riesegui l'installer per ottenere il nuovo stato SPEC `needs-review` e gli agenti `repodoc-consistency-check`/`repodoc-doctor` aggiornati. Nessuna migrazione delle SPEC è richiesta. Le modifiche dirette al codice fuori da `repodoc-implement-specs` ("vibe coding") restano consentite, ma devono rimanere coerenti con le SPEC esistenti: una modifica che riguarda una SPEC `closed` la riporta a `needs-review` con `implementation.state: partial`, e lavoro nuovo genuino crea una SPEC direttamente a `needs-review` invece che a `draft`/`proposed`/`ready`. `repodoc-consistency-check` applica questo come correzione inequivocabile; `repodoc-doctor` lo segnala soltanto, in sola lettura. Revisionare una SPEC `needs-review` è un passo separato ed esplicito.

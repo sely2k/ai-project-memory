@@ -13,7 +13,7 @@ Check:
 2. balanced unique managed markers, version, and protocol reference in present wrappers;
 3. version, front matter or TOML, name, and minimum fields of installed agents and skills, using only already available parsers;
 4. document paths, naming, relative links, indexes, and placeholders; for multi-platform projects, a unique platform-to-suffix map in `repodoc/ontology.md` and suffix use in project names; missing initial documents are a bootstrap warning;
-5. for every SPEC: required fields; compatible status plus explicit approval/publication; scope/platform; unique positions; body for approved work; publication consistent with issue; closure reason; checkpoint; acyclic `depends_on`; separate informational relations; approved `submitted` specs remain executable;
+5. for every SPEC: required fields; compatible status plus explicit approval/publication; scope/platform; unique positions; body for approved work; publication consistent with issue; closure reason; checkpoint; acyclic `depends_on`; separate informational relations; approved `submitted` specs remain executable; flag, read-only, a `closed` SPEC whose code appears to have changed after closure outside the reviewed flow (its checkpoint's recorded commit no longer matches the file's current history) — it should be `needs-review`, not `closed`;
 6. one matching index entry per SPEC including projected lifecycle fields, scope/group/order, dependency-compatible ordering, and a link from the general index.
 
 Do not check for RepoDoc updates. Produce `PASS`, `WARN`, `ERROR`, and `SKIP` counts, then issues ordered by severity with file, check, evidence, and remediation. Finish with `healthy`, `healthy with warnings`, or `unhealthy`. Never apply fixes.

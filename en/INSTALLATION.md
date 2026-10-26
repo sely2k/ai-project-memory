@@ -122,3 +122,7 @@ Re-run the installer and overwrite RepoDoc-owned protocol and agent files; manag
 ## Upgrade notes for 1.12
 
 Re-run the installer to add the new `repodoc-scout-spec-worker` agent and pick up the updated `repodoc-implement-specs`, `repodoc-implement-spec-worker`, and `repodoc-review-spec-worker`. No SPEC file changes are required: implementation now groups selected SPECs into a batch (`BATCH_ID`), plans it once with a reviewable `repodoc/plans/<BATCH_ID>.md` on `feature/batch-<BATCH_ID>`, and reviews it once on `review/batch-<BATCH_ID>` before per-SPEC integration. Keep SPECs small; split an oversized one into parent/child SPECs by hand before implementing it.
+
+## Upgrade notes for 1.13
+
+Re-run the installer to pick up the new `needs-review` SPEC status and the updated `repodoc-consistency-check`/`repodoc-doctor`. No SPEC migration is required. Direct code changes outside `repodoc-implement-specs` ("vibe coding") remain allowed, but must stay consistent with existing SPECs: a change affecting a `closed` SPEC moves it back to `needs-review` with `implementation.state: partial`, and genuinely new work gets a SPEC created directly at `needs-review` instead of `draft`/`proposed`/`ready`. `repodoc-consistency-check` applies this as an unambiguous fix; `repodoc-doctor` only reports it, read-only. Reviewing a `needs-review` SPEC is a separate, explicit step.

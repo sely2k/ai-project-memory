@@ -25,7 +25,7 @@ Per ciascun documento e tra documenti, controlla:
 - **Riferimenti incrociati non reciproci**: un `Related` che dovrebbe puntare indietro e non lo fa.
 - **Stati incoerenti**: un `OPEN-xxx` `resolved` senza ADR corrispondente quando serve; un ADR che risolve un OPEN ancora `open`; una `SPEC-xxx` `submitted` senza `github.issue` coerente.
 - **Duplicazione della fonte di verità**: la stessa informazione descritta in modo divergente in più documenti, incluso lavoro proposto copiato in un elenco feature informale invece di vivere soltanto nella propria SPEC.
-- **Ciclo di vita SPEC non valido**: stati non supportati; `ready` senza dettaglio completo e approvazione esplicita; `submitted` senza `github.issue`; lavoro rejected o superseded ancora trattato come attivo.
+- **Ciclo di vita SPEC non valido**: stati non supportati; `ready` senza dettaglio completo e approvazione esplicita; `submitted` senza `github.issue`; lavoro rejected o superseded ancora trattato come attivo; una SPEC `closed` il cui codice è cambiato fuori dal flusso implementativo revisionato dopo la chiusura (una modifica diretta/"vibe coded", non un'esecuzione di `repodoc-implement-specs`) — trattalo come correzione inequivocabile: imposta `needs-review` e `implementation.state: partial` invece di lasciarla `closed`.
 - **Terminologia incoerente** rispetto a `repodoc/glossary.md`, se esiste.
 - **Indici e pianificazione disallineati**: indice specializzato non collegato, SPEC mancante, duplicata, stantia o sotto ambito/gruppo/ordine errati, posizione duplicata o ordine incompatibile con le dipendenze.
 - **Naming piattaforma non valido**: piattaforma SPEC assente da `repodoc/ontology.md`, suffissi duplicati o nome di progetto specifico senza il suffisso mappato.
