@@ -9,6 +9,7 @@ DEFAULT_GITHUB_OWNER = "sely2k"
 REPODOC_VERSION = "1.12.0"
 
 from pathlib import Path
+import json
 import re
 import subprocess
 import sys
@@ -33,54 +34,11 @@ PROTOCOL_DESTINATION = "repodoc/memory-protocol.md"
 # RepoDoc agents are standalone dedicated files, not managed-block merges.
 # Memory-changing agents use the active working tree from CLI and the persistent
 # GitHub PR from chat; doctor stays read-only; implementation uses code branches.
-AGENT_FILES = {
-    "claude-code": [
-        ("claude-code/agents/bootstrap.md", ".claude/agents/repodoc-bootstrap.md"),
-        ("claude-code/agents/doctor.md", ".claude/agents/repodoc-doctor.md"),
-        ("claude-code/agents/consistency-check.md", ".claude/agents/repodoc-consistency-check.md"),
-        ("claude-code/agents/close-openpoint.md", ".claude/agents/repodoc-close-openpoint.md"),
-        ("claude-code/agents/synthesize-specs.md", ".claude/agents/repodoc-synthesize-specs.md"),
-        ("claude-code/agents/expand-specs.md", ".claude/agents/repodoc-expand-specs.md"),
-        ("claude-code/agents/expand-spec-worker.md", ".claude/agents/repodoc-expand-spec-worker.md"),
-        ("claude-code/agents/implement-specs.md", ".claude/agents/repodoc-implement-specs.md"),
-        ("claude-code/agents/scout-spec-worker.md", ".claude/agents/repodoc-scout-spec-worker.md"),
-        ("claude-code/agents/implement-spec-worker.md", ".claude/agents/repodoc-implement-spec-worker.md"),
-        ("claude-code/agents/review-spec-worker.md", ".claude/agents/repodoc-review-spec-worker.md"),
-    ],
-    "codex": [
-        ("codex/agents/bootstrap.toml", ".codex/agents/repodoc-bootstrap.toml"),
-        ("codex/agents/doctor.toml", ".codex/agents/repodoc-doctor.toml"),
-        ("codex/agents/consistency-check.toml", ".codex/agents/repodoc-consistency-check.toml"),
-        ("codex/agents/close-openpoint.toml", ".codex/agents/repodoc-close-openpoint.toml"),
-        ("codex/agents/synthesize-specs.toml", ".codex/agents/repodoc-synthesize-specs.toml"),
-        ("codex/agents/expand-specs.toml", ".codex/agents/repodoc-expand-specs.toml"),
-        ("codex/agents/implement-specs.toml", ".codex/agents/repodoc-implement-specs.toml"),
-        ("codex/agents/scout-spec-worker.toml", ".codex/agents/repodoc-scout-spec-worker.toml"),
-        ("codex/agents/implement-spec-worker.toml", ".codex/agents/repodoc-implement-spec-worker.toml"),
-        ("codex/agents/review-spec-worker.toml", ".codex/agents/repodoc-review-spec-worker.toml"),
-    ],
-    "copilot": [
-        ("copilot/agents/bootstrap.agent.md", ".github/agents/repodoc-bootstrap.agent.md"),
-        ("copilot/agents/doctor.agent.md", ".github/agents/repodoc-doctor.agent.md"),
-        ("copilot/agents/consistency-check.agent.md", ".github/agents/repodoc-consistency-check.agent.md"),
-        ("copilot/agents/close-openpoint.agent.md", ".github/agents/repodoc-close-openpoint.agent.md"),
-        ("copilot/agents/synthesize-specs.agent.md", ".github/agents/repodoc-synthesize-specs.agent.md"),
-        ("copilot/agents/expand-specs.agent.md", ".github/agents/repodoc-expand-specs.agent.md"),
-        ("copilot/agents/implement-specs.agent.md", ".github/agents/repodoc-implement-specs.agent.md"),
-        ("copilot/agents/scout-spec-worker.agent.md", ".github/agents/repodoc-scout-spec-worker.agent.md"),
-        ("copilot/agents/implement-spec-worker.agent.md", ".github/agents/repodoc-implement-spec-worker.agent.md"),
-        ("copilot/agents/review-spec-worker.agent.md", ".github/agents/repodoc-review-spec-worker.agent.md"),
-    ],
-}
-# The spec-expansion skill is authored once and dropped at whichever
-# tool-specific discovery path applies: Claude Code only reads
-# .claude/skills/; Codex and Copilot CLI both discover .agents/skills/.
-SKILL_FILE = "skills/spec-expand/SKILL.md"
-SKILL_DESTINATIONS = {
-    "claude-code": ".claude/skills/repodoc-spec-expand/SKILL.md",
-    "codex": ".agents/skills/repodoc-spec-expand/SKILL.md",
-    "copilot": ".agents/skills/repodoc-spec-expand/SKILL.md",
-}
+#
+# AGENT_FILES, SKILL_FILE, and SKILL_DESTINATIONS are derived from CATALOG
+# (repodoc/catalog.json), the single source of truth shared with install-tool.py's
+# per-component selection. See load_catalog() below.
+CATALOG_FILE = "repodoc/catalog.json"
 GITHUB_BACKEND = "repodoc/backends/github.md"
 MANAGED_TOOLS = {"claude-code", "codex", "copilot"}
 MANAGED_BLOCK_START = "<!-- repodoc:start -->"
@@ -267,6 +225,44 @@ def read_template(language: str, relative_path: str) -> str:
         except (HTTPError, URLError, TimeoutError) as error:
             errors.append(f"{url}: {error}")
     raise RuntimeError("Could not download template from any source:\n- " + "\n- ".join(errors))
+
+
+def load_catalog() -> dict:
+    """Load repodoc/catalog.json: the shared source of truth for agents and skills,
+    used both to build AGENT_FILES/SKILL_FILE/SKILL_DESTINATIONS below and by
+    install-tool.py's per-component selection."""
+    local_path = Path(__file__).resolve().parent / CATALOG_FILE
+    if local_path.is_file():
+        return json.loads(local_path.read_text(encoding="utf-8"))
+
+    errors = []
+    for base_url in template_base_urls():
+        url = f"{base_url}/{CATALOG_FILE}"
+        try:
+            with urlopen(url, timeout=30) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except (HTTPError, URLError, TimeoutError) as error:
+            errors.append(f"{url}: {error}")
+    raise RuntimeError("Could not load repodoc/catalog.json from any source:\n- " + "\n- ".join(errors))
+
+
+def agent_files_from_catalog(catalog: dict) -> dict[str, list[tuple[str, str]]]:
+    files: dict[str, list[tuple[str, str]]] = {tool: [] for tool in MANAGED_TOOLS}
+    for agent in catalog["agents"]:
+        for tool, mapping in agent["tools"].items():
+            files[tool].append((mapping["source"], mapping["destination"]))
+    return files
+
+
+def skill_from_catalog(catalog: dict) -> tuple[str, dict[str, str]]:
+    # A single shared skill file today; revisit if the catalog ever lists more than one.
+    skill = catalog["skills"][0]
+    return skill["source"], dict(skill["destinations"])
+
+
+CATALOG = load_catalog()
+AGENT_FILES = agent_files_from_catalog(CATALOG)
+SKILL_FILE, SKILL_DESTINATIONS = skill_from_catalog(CATALOG)
 
 
 def confirm_overwrite(path: Path, language: str) -> str:

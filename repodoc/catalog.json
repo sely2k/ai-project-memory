@@ -1,0 +1,218 @@
+{
+  "agents": [
+    {
+      "id": "repodoc-bootstrap",
+      "description": "Inspects existing repository evidence, asks only for missing context one question at a time, then creates the minimal initial memory using the active write mode.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/bootstrap.md", "destination": ".claude/agents/repodoc-bootstrap.md"},
+        "codex": {"source": "codex/agents/bootstrap.toml", "destination": ".codex/agents/repodoc-bootstrap.toml"},
+        "copilot": {"source": "copilot/agents/bootstrap.agent.md", "destination": ".github/agents/repodoc-bootstrap.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-doctor",
+      "description": "Checks versions, managed wrappers, agent formats, placeholders, links, indexes, and SPEC structure read-only; reports remediation without changing anything or looking for updates.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/doctor.md", "destination": ".claude/agents/repodoc-doctor.md"},
+        "codex": {"source": "codex/agents/doctor.toml", "destination": ".codex/agents/repodoc-doctor.toml"},
+        "copilot": {"source": "copilot/agents/doctor.agent.md", "destination": ".github/agents/repodoc-doctor.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-consistency-check",
+      "description": "Audits the whole repodoc/ memory backend for broken links, one-way cross-references, stale statuses, and duplicated sources of truth; fixes unambiguous issues and flags the rest for a decision.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/consistency-check.md", "destination": ".claude/agents/repodoc-consistency-check.md"},
+        "codex": {"source": "codex/agents/consistency-check.toml", "destination": ".codex/agents/repodoc-consistency-check.toml"},
+        "copilot": {"source": "copilot/agents/consistency-check.agent.md", "destination": ".github/agents/repodoc-consistency-check.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-close-openpoint",
+      "description": "Gathers evidence from linked documents (and, read-only, from the code) and either resolves an OPEN point — creating or updating an ADR when it is a real decision — or updates it with what is still missing.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/close-openpoint.md", "destination": ".claude/agents/repodoc-close-openpoint.md"},
+        "codex": {"source": "codex/agents/close-openpoint.toml", "destination": ".codex/agents/repodoc-close-openpoint.toml"},
+        "copilot": {"source": "copilot/agents/close-openpoint.agent.md", "destination": ".github/agents/repodoc-close-openpoint.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-synthesize-specs",
+      "description": "Scans what a closed situation (a resolved OPEN, a new ADR, a completed batch of REQs) implies and records newly visible future work directly as minimal SPEC-xxx-<title>.yaml proposals with status: proposed.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/synthesize-specs.md", "destination": ".claude/agents/repodoc-synthesize-specs.md"},
+        "codex": {"source": "codex/agents/synthesize-specs.toml", "destination": ".codex/agents/repodoc-synthesize-specs.toml"},
+        "copilot": {"source": "copilot/agents/synthesize-specs.agent.md", "destination": ".github/agents/repodoc-synthesize-specs.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-expand-specs",
+      "description": "Expands all or several draft/proposed SPECs in one pass, processing the selected YAML files sequentially in the active write mode. On Claude Code it hands off each file to repodoc-expand-spec-worker; on Codex and Copilot it runs the same steps inline.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/expand-specs.md", "destination": ".claude/agents/repodoc-expand-specs.md"},
+        "codex": {"source": "codex/agents/expand-specs.toml", "destination": ".codex/agents/repodoc-expand-specs.toml"},
+        "copilot": {"source": "copilot/agents/expand-specs.agent.md", "destination": ".github/agents/repodoc-expand-specs.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-expand-spec-worker",
+      "description": "Internal sub-agent that repodoc-expand-specs spawns once per SPEC (Claude Code only), so each expansion starts from a clean context and they never run in parallel on the same branch. Never invoked directly.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/expand-spec-worker.md", "destination": ".claude/agents/repodoc-expand-spec-worker.md"}
+      }
+    },
+    {
+      "id": "repodoc-implement-specs",
+      "description": "Groups the selection into one batch, launches a fresh scout to plan and validate it once, then a fresh implementer per SPEC and a batch-wide independent reviewer, coordinating verified integration and completion tags.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/implement-specs.md", "destination": ".claude/agents/repodoc-implement-specs.md"},
+        "codex": {"source": "codex/agents/implement-specs.toml", "destination": ".codex/agents/repodoc-implement-specs.toml"},
+        "copilot": {"source": "copilot/agents/implement-specs.agent.md", "destination": ".github/agents/repodoc-implement-specs.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-scout-spec-worker",
+      "description": "Plans one batch once: validates dependencies/ontology/delivery and reconciles each SPEC's state, then writes one reviewable plan on a dedicated batch branch before any code changes. Never invoked directly.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/scout-spec-worker.md", "destination": ".claude/agents/repodoc-scout-spec-worker.md"},
+        "codex": {"source": "codex/agents/scout-spec-worker.toml", "destination": ".codex/agents/repodoc-scout-spec-worker.toml"},
+        "copilot": {"source": "copilot/agents/scout-spec-worker.agent.md", "destination": ".github/agents/repodoc-scout-spec-worker.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-implement-spec-worker",
+      "description": "Verifies and implements only missing scope for one SPEC on a dedicated branch, following its batch's reviewed plan; never merges, tags, reviews, or edits RepoDoc state. Never invoked directly.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/implement-spec-worker.md", "destination": ".claude/agents/repodoc-implement-spec-worker.md"},
+        "codex": {"source": "codex/agents/implement-spec-worker.toml", "destination": ".codex/agents/repodoc-implement-spec-worker.toml"},
+        "copilot": {"source": "copilot/agents/implement-spec-worker.agent.md", "destination": ".github/agents/repodoc-implement-spec-worker.agent.md"}
+      }
+    },
+    {
+      "id": "repodoc-review-spec-worker",
+      "description": "Independently reviews a batch's exact implementation commits (one or more SPECs) read-only and returns structured per-SPEC blockers, observations, and evidence. Never invoked directly.",
+      "tools": {
+        "claude-code": {"source": "claude-code/agents/review-spec-worker.md", "destination": ".claude/agents/repodoc-review-spec-worker.md"},
+        "codex": {"source": "codex/agents/review-spec-worker.toml", "destination": ".codex/agents/repodoc-review-spec-worker.toml"},
+        "copilot": {"source": "copilot/agents/review-spec-worker.agent.md", "destination": ".github/agents/repodoc-review-spec-worker.agent.md"}
+      }
+    }
+  ],
+  "skills": [
+    {
+      "id": "repodoc-spec-expand",
+      "description": "Enriches one draft or proposed SPEC in place with scope, ordered tasks, atomic subtasks, acceptance criteria, and relations. Expansion does not imply approval.",
+      "source": "skills/spec-expand/SKILL.md",
+      "destinations": {
+        "claude-code": ".claude/skills/repodoc-spec-expand/SKILL.md",
+        "codex": ".agents/skills/repodoc-spec-expand/SKILL.md",
+        "copilot": ".agents/skills/repodoc-spec-expand/SKILL.md"
+      }
+    }
+  ],
+  "plugins": [],
+  "external": [
+    {
+      "id": "awesome-copilot-adr-generator",
+      "kind": "agent",
+      "description": "Creates structured Architectural Decision Records with rationale, consequences, and alternatives. Pairs with RepoDoc's own ADR concept.",
+      "source_repo": "github/awesome-copilot",
+      "source_path": "agents/adr-generator.agent.md",
+      "license_note": "Third-party content from github/awesome-copilot, not authored by RepoDoc. Review it before installing.",
+      "tools": {
+        "copilot": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/agents/adr-generator.agent.md",
+          "destination": ".github/agents/awesome-copilot-adr-generator.agent.md"
+        }
+      }
+    },
+    {
+      "id": "awesome-copilot-security-review",
+      "kind": "skill",
+      "description": "AI-powered security scanner that traces data flows across JS/TS, Python, Java, PHP, Go, Ruby, and Rust to catch injection, auth, secrets, and crypto issues pattern-matching tools miss.",
+      "source_repo": "github/awesome-copilot",
+      "source_path": "skills/security-review/SKILL.md",
+      "license_note": "Third-party content from github/awesome-copilot, not authored by RepoDoc. Review it before installing.",
+      "tools": {
+        "claude-code": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/security-review/SKILL.md",
+          "destination": ".claude/skills/awesome-copilot-security-review/SKILL.md"
+        },
+        "codex": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/security-review/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-security-review/SKILL.md"
+        },
+        "copilot": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/security-review/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-security-review/SKILL.md"
+        }
+      }
+    },
+    {
+      "id": "awesome-copilot-conventional-commit",
+      "kind": "skill",
+      "description": "Generates standardized commit messages following the Conventional Commits specification, with examples and validation.",
+      "source_repo": "github/awesome-copilot",
+      "source_path": "skills/conventional-commit/SKILL.md",
+      "license_note": "Third-party content from github/awesome-copilot, not authored by RepoDoc. Review it before installing.",
+      "tools": {
+        "claude-code": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/conventional-commit/SKILL.md",
+          "destination": ".claude/skills/awesome-copilot-conventional-commit/SKILL.md"
+        },
+        "codex": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/conventional-commit/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-conventional-commit/SKILL.md"
+        },
+        "copilot": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/conventional-commit/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-conventional-commit/SKILL.md"
+        }
+      }
+    },
+    {
+      "id": "awesome-copilot-create-readme",
+      "kind": "skill",
+      "description": "Reviews the project and writes a comprehensive, well-structured README.md.",
+      "source_repo": "github/awesome-copilot",
+      "source_path": "skills/create-readme/SKILL.md",
+      "license_note": "Third-party content from github/awesome-copilot, not authored by RepoDoc. Review it before installing.",
+      "tools": {
+        "claude-code": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/create-readme/SKILL.md",
+          "destination": ".claude/skills/awesome-copilot-create-readme/SKILL.md"
+        },
+        "codex": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/create-readme/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-create-readme/SKILL.md"
+        },
+        "copilot": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/create-readme/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-create-readme/SKILL.md"
+        }
+      }
+    },
+    {
+      "id": "awesome-copilot-refactor-plan",
+      "kind": "skill",
+      "description": "Before a multi-file refactor, investigates the codebase first, writes a concrete sequenced plan, and waits for confirmation before changing any code.",
+      "source_repo": "github/awesome-copilot",
+      "source_path": "skills/refactor-plan/SKILL.md",
+      "license_note": "Third-party content from github/awesome-copilot, not authored by RepoDoc. Review it before installing.",
+      "tools": {
+        "claude-code": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/refactor-plan/SKILL.md",
+          "destination": ".claude/skills/awesome-copilot-refactor-plan/SKILL.md"
+        },
+        "codex": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/refactor-plan/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-refactor-plan/SKILL.md"
+        },
+        "copilot": {
+          "source_url": "https://raw.githubusercontent.com/github/awesome-copilot/main/skills/refactor-plan/SKILL.md",
+          "destination": ".agents/skills/awesome-copilot-refactor-plan/SKILL.md"
+        }
+      }
+    }
+  ]
+}
