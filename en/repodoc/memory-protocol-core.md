@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.11.0 -->
+<!-- repodoc:version 1.12.0 -->
 
 # Persistent memory protocol
 
@@ -234,13 +234,27 @@ This publishing step is a real, externally visible action — it is not covered 
 
 Implementing code from SPECs is never automatic. Start only on explicit request and only when `approval: approved`; compatible `ready` and `submitted` files both qualify. Keep each repository in an independent session.
 
+### Batches, plans, and branches
+
+Group the SPECs selected for one implementation run into a **batch**, identified by `BATCH_ID` in `<YYYYMMDD>-<HHmm>` format (the run's own start date and time, e.g. `20261026-1430`). A batch may cover one SPEC or several; it is a unit of planning and review, not a new approval state, and it never encodes the included SPEC ids or ranges — the plan document does.
+
+Before any code changes, a scouting pass produces exactly one reviewable low-level plan for the whole batch at `repodoc/plans/<BATCH_ID>.md`, committed to a dedicated `feature/batch-<BATCH_ID>` branch. Validate `depends_on`, `relations.related`, `delivery.group`/`delivery.order`, and ontology-backed platform suffixes once for the entire batch here, not once per SPEC. For every SPEC in the batch, the plan also reconciles existing state (checkpoint, local/remote branch, PR/merge/tag) into the `absent`/`partial`/`satisfied`/`ambiguous` classification, and lists the concrete files and changes anticipated. Do not start implementation until the plan branch exists and has been reviewed; publishing it is a real action visible to others, like any other.
+
+Each SPEC keeps its own dedicated implementation branch, `feature/<lowercase-spec-id>-<title-slug>`. Once every SPEC in the batch has a pushed implementation, review happens on a dedicated `review/batch-<BATCH_ID>` branch against the batch's aggregated diff. A fix cycle for one SPEC's findings stays scoped to that SPEC's branch and triggers a re-review of only that changed diff, never a re-review of the whole batch.
+
+### Keeping SPECs small
+
+Keep each SPEC small enough for one fresh worker to implement in a single pass: a handful of files, one coherent change. When implementing reveals that the real scope is substantially larger than planned — a distinct component, or an infrastructure piece that a pipeline depends on and makes sense to build together with it — stop and report it as a new SPEC to create by hand, linked through `relations.parent`/`relations.children`, rather than silently expanding the current SPEC or the batch plan. Decomposing proposed work into such parent/child SPECs is always a human decision; no agent creates one unprompted.
+
+Within that scope, favor minimal, single-responsibility changes: touch only what the SPEC requires, keep functions and classes small and focused, and avoid unrelated refactors. The reviewer checks for this alongside correctness.
+
 Tasks and subtasks in the SPEC are the canonical functional plan. Do not duplicate them elsewhere. The `implementation` block is only a resumability checkpoint, owned by the orchestrator and updated in the active RepoDoc write mode after every meaningful step, not by the implementation worker on its code branch. It records at least branch, checkpoint commit, SPEC revision, checks and results tied to a commit, independent review, blocker, and PR/merge/tag references. Checkboxes alone are not evidence. `partial` means unfinished work, `verified` means implementation and review passed but target integration is not verified, and `completed` requires verified target integration.
 
-Before changing code, compare the SPEC with existing implementation and tests and classify it as absent, partial, satisfied, or ambiguous. Implement only gaps. Already-satisfied work receives evidence and required checks without artificial changes or commits. On resume, reconcile the SPEC revision, checkpoint, code, local and remote Git/PR/tag state; reuse matching evidence and repeat checks invalidated by later changes. This makes interruption between merge, tag, and memory update idempotent.
+Before changing code, compare the SPEC with existing implementation and tests; the batch plan already carries this classification, so reuse it instead of recomputing it per SPEC. Implement only gaps. Already-satisfied work receives evidence and required checks without artificial changes or commits. On resume, reconcile the SPEC revision, checkpoint, code, local and remote Git/PR/tag state; reuse matching evidence and repeat checks invalidated by later changes. This makes interruption between merge, tag, and memory update idempotent.
 
-For multiple SPECs, resolve and order them by mandatory `depends_on`, then `delivery.group` and `delivery.order`; stop on missing dependencies, cycles, contradictions, or ambiguity. Process one at a time from the updated target and stop at the first blocker. Use a dedicated branch and a fresh isolated implementation worker for each SPEC. Then launch a different fresh `repodoc-review-spec-worker` for the exact reviewed commit. The reviewer is read-only and checks acceptance coverage, correctness/regressions, architecture/dependency boundaries, tests, and unrelated changes, returning blocking findings, observations, and verifiable references.
+For multiple SPECs, resolve and order them by mandatory `depends_on`, then `delivery.group` and `delivery.order`; stop on missing dependencies, cycles, contradictions, or ambiguity. Process one at a time from the updated target and stop at the first blocker. Use a dedicated branch and a fresh isolated implementation worker for each SPEC. Once the batch's SPECs are implemented, launch a fresh `repodoc-review-spec-worker` for the batch's exact reviewed commits on `review/batch-<BATCH_ID>`. The reviewer is read-only and checks acceptance coverage, correctness/regressions, architecture/dependency boundaries, tests, SPEC-size and single-responsibility drift, and unrelated changes, returning blocking findings, observations, and verifiable references per SPEC.
 
-Blocking findings return to the implementer; affected checks run again and every changed commit receives a new independent review. The review-cycle limit is configurable and defaults to 3. At the limit preserve the branch and checkpoint and report the blocker.
+Blocking findings return to the implementer of the affected SPEC; affected checks run again and the changed commit receives a new independent review scoped to that SPEC. The review-cycle limit is configurable and defaults to 3 per SPEC. At the limit preserve the branch and checkpoint and report the blocker.
 
 The default integration policy is `pull-request` (pull request): open/update a dedicated PR and do not merge. `direct-merge` is allowed only when the request explicitly authorizes it; selection-wide authorization applies to every selected SPEC without repeated prompts. Do not globally change the default target: use `develop` only when requested or conventional. Before pushing a target that triggers deployment, obtain any additional authorization required by repository policy.
 

@@ -140,3 +140,7 @@ cp it/claude/instruction.md <repository-target>/repodoc/claude-chat-instruction.
 ## Note di aggiornamento alla 1.11
 
 Riesegui l'installer e sovrascrivi i file di protocollo e agenti gestiti da RepoDoc; il contenuto dei wrapper viene preservato. Le SPEC esistenti restano leggibili. Migrale gradualmente con `approval`, `publication`, `depends_on`, `implementation` e `closure`: mappa `ready` ad approved/unpublished e `submitted` ad approved/published, non copiare `relations.related` in `depends_on` e non inventare il motivo di una SPEC legacy `closed`.
+
+## Note di aggiornamento alla 1.12
+
+Riesegui l'installer per aggiungere il nuovo agente `repodoc-scout-spec-worker` e aggiornare `repodoc-implement-specs`, `repodoc-implement-spec-worker` e `repodoc-review-spec-worker`. Nessuna migrazione dei file SPEC è richiesta: l'implementazione ora raggruppa le SPEC selezionate in un batch (`BATCH_ID`), lo pianifica una sola volta con un piano revisionabile in `repodoc/plans/<BATCH_ID>.md` su `feature/batch-<BATCH_ID>`, e lo revisiona una sola volta su `review/batch-<BATCH_ID>` prima dell'integrazione per SPEC. Mantieni le SPEC piccole; scomponi a mano quelle troppo grandi in SPEC genitore/figlie prima di implementarle.

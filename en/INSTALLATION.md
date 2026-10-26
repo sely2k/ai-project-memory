@@ -118,3 +118,7 @@ The `repodoc-spec-expand` skill is authored once and copied to whichever native 
 ## Upgrade notes for 1.11
 
 Re-run the installer and overwrite RepoDoc-owned protocol and agent files; managed wrapper content is preserved. Existing SPECs remain readable. Migrate them incrementally with `approval`, `publication`, `depends_on`, `implementation`, and `closure`: map `ready` to approved/unpublished and `submitted` to approved/published, never copy `relations.related` into `depends_on`, and do not guess the reason for a legacy `closed` SPEC.
+
+## Upgrade notes for 1.12
+
+Re-run the installer to add the new `repodoc-scout-spec-worker` agent and pick up the updated `repodoc-implement-specs`, `repodoc-implement-spec-worker`, and `repodoc-review-spec-worker`. No SPEC file changes are required: implementation now groups selected SPECs into a batch (`BATCH_ID`), plans it once with a reviewable `repodoc/plans/<BATCH_ID>.md` on `feature/batch-<BATCH_ID>`, and reviews it once on `review/batch-<BATCH_ID>` before per-SPEC integration. Keep SPECs small; split an oversized one into parent/child SPECs by hand before implementing it.

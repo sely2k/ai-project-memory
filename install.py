@@ -6,7 +6,7 @@
 SOURCE_REPOSITORY = "https://github.com/sely2k/ai-project-memory"
 SOURCE_BRANCH = "main"
 DEFAULT_GITHUB_OWNER = "sely2k"
-REPODOC_VERSION = "1.11.0"
+REPODOC_VERSION = "1.12.0"
 
 from pathlib import Path
 import re
@@ -43,6 +43,7 @@ AGENT_FILES = {
         ("claude-code/agents/expand-specs.md", ".claude/agents/repodoc-expand-specs.md"),
         ("claude-code/agents/expand-spec-worker.md", ".claude/agents/repodoc-expand-spec-worker.md"),
         ("claude-code/agents/implement-specs.md", ".claude/agents/repodoc-implement-specs.md"),
+        ("claude-code/agents/scout-spec-worker.md", ".claude/agents/repodoc-scout-spec-worker.md"),
         ("claude-code/agents/implement-spec-worker.md", ".claude/agents/repodoc-implement-spec-worker.md"),
         ("claude-code/agents/review-spec-worker.md", ".claude/agents/repodoc-review-spec-worker.md"),
     ],
@@ -54,6 +55,7 @@ AGENT_FILES = {
         ("codex/agents/synthesize-specs.toml", ".codex/agents/repodoc-synthesize-specs.toml"),
         ("codex/agents/expand-specs.toml", ".codex/agents/repodoc-expand-specs.toml"),
         ("codex/agents/implement-specs.toml", ".codex/agents/repodoc-implement-specs.toml"),
+        ("codex/agents/scout-spec-worker.toml", ".codex/agents/repodoc-scout-spec-worker.toml"),
         ("codex/agents/implement-spec-worker.toml", ".codex/agents/repodoc-implement-spec-worker.toml"),
         ("codex/agents/review-spec-worker.toml", ".codex/agents/repodoc-review-spec-worker.toml"),
     ],
@@ -65,6 +67,7 @@ AGENT_FILES = {
         ("copilot/agents/synthesize-specs.agent.md", ".github/agents/repodoc-synthesize-specs.agent.md"),
         ("copilot/agents/expand-specs.agent.md", ".github/agents/repodoc-expand-specs.agent.md"),
         ("copilot/agents/implement-specs.agent.md", ".github/agents/repodoc-implement-specs.agent.md"),
+        ("copilot/agents/scout-spec-worker.agent.md", ".github/agents/repodoc-scout-spec-worker.agent.md"),
         ("copilot/agents/implement-spec-worker.agent.md", ".github/agents/repodoc-implement-spec-worker.agent.md"),
         ("copilot/agents/review-spec-worker.agent.md", ".github/agents/repodoc-review-spec-worker.agent.md"),
     ],

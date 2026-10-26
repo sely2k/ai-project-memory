@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.11.0 -->
+<!-- repodoc:version 1.12.0 -->
 
 # Protocollo di memoria persistente
 
@@ -243,13 +243,27 @@ Questo passo di pubblicazione è un'azione reale e visibile ad altri: non rientr
 
 L'implementazione di codice da SPEC non è mai automatica. Iniziala solo su richiesta esplicita e con `approval: approved`; i file compatibili `ready` e `submitted` sono entrambi idonei. Mantieni ogni repository in una sessione indipendente.
 
+### Batch, piani e branch
+
+Raggruppa le SPEC selezionate per un'esecuzione implementativa in un **batch**, identificato da `BATCH_ID` nel formato `<YYYYMMDD>-<HHmm>` (data e ora di avvio dell'esecuzione, es. `20261026-1430`). Un batch può coprire una sola SPEC o diverse; è un'unità di pianificazione e revisione, non un nuovo stato di approvazione, e il suo id non codifica mai le SPEC incluse o un loro intervallo — questo lo elenca il piano.
+
+Prima di ogni modifica al codice, una fase di scouting produce un solo piano a basso livello revisionabile per l'intero batch in `repodoc/plans/<BATCH_ID>.md`, committato su un branch dedicato `feature/batch-<BATCH_ID>`. Valida `depends_on`, `relations.related`, `delivery.group`/`delivery.order` e l'ontologia una sola volta per l'intero batch, non per ogni SPEC. Per ogni SPEC del batch, il piano riconcilia anche lo stato esistente (checkpoint, branch locale/remoto, PR/merge/tag) nella classificazione `absent`/`partial`/`satisfied`/`ambiguous`, ed elenca i file e le modifiche previste. Non avviare l'implementazione finché il branch del piano non esiste e non è stato revisionato; pubblicarlo è un'azione reale visibile ad altri, come ogni altra.
+
+Ogni SPEC mantiene il proprio branch implementativo dedicato, `feature/<spec-id-minuscolo>-<slug-titolo>`. Quando ogni SPEC del batch ha un'implementazione pubblicata, la revisione avviene su un branch dedicato `review/batch-<BATCH_ID>` contro il diff aggregato del batch. Un ciclo di correzione per i findings di una SPEC resta limitato al branch di quella SPEC e genera una nuova revisione solo di quel diff cambiato, mai del batch intero.
+
+### SPEC piccole
+
+Mantieni ogni SPEC abbastanza piccola da essere implementata in un solo passaggio da un worker nuovo: pochi file, una modifica coerente. Se implementandola emerge che la portata reale è molto più ampia del previsto — un componente distinto, o un pezzo di infrastruttura da cui dipende una pipeline e che ha senso costruire insieme ad essa — fermati e segnalalo come candidato per una nuova SPEC creata a mano, collegata tramite `relations.parent`/`relations.children`, invece di espandere la SPEC o il piano del batch. Scomporre lavoro proposto in SPEC genitore/figlie è sempre una decisione umana; nessun agente la prende di propria iniziativa.
+
+Nell'ambito previsto, privilegia modifiche minime e a responsabilità unica: tocca solo ciò che la SPEC richiede, mantieni funzioni e classi piccole e focalizzate, ed evita refactor estranei. Il revisore controlla anche questo, non solo la correttezza.
+
 Task e sottotask della SPEC sono il piano funzionale canonico: non duplicarli altrove. Il blocco `implementation` è soltanto un checkpoint di ripresa, di responsabilità dell'orchestratore e aggiornato nella modalità RepoDoc attiva dopo ogni passo significativo, non dal worker nel branch di codice. Registra almeno branch, commit di checkpoint, revisione SPEC, controlli ed esiti legati a un commit, revisione indipendente, blocco e riferimenti PR/merge/tag. Le checkbox non sono prove. `partial` indica lavoro incompleto, `verified` implementazione e revisione positive ma integrazione non verificata, `completed` richiede integrazione verificata.
 
-Prima di cambiare codice confronta SPEC, implementazione e test e classifica il lavoro come assente, parziale, soddisfatto o ambiguo. Implementa solo le lacune. Per lavoro già soddisfatto raccogli evidenze ed esegui i controlli senza modifiche o commit artificiali. Alla ripresa riconcilia revisione SPEC, checkpoint, codice e stato Git/PR/tag locale e remoto; riusa evidenze coincidenti e ripeti i controlli invalidati. Così le interruzioni tra merge, tag e memoria sono idempotenti.
+Prima di cambiare codice confronta SPEC, implementazione e test; il piano del batch porta già questa classificazione, quindi riusala invece di ricalcolarla per ogni SPEC. Implementa solo le lacune. Per lavoro già soddisfatto raccogli evidenze ed esegui i controlli senza modifiche o commit artificiali. Alla ripresa riconcilia revisione SPEC, checkpoint, codice e stato Git/PR/tag locale e remoto; riusa evidenze coincidenti e ripeti i controlli invalidati. Così le interruzioni tra merge, tag e memoria sono idempotenti.
 
-Per più SPEC, ordinale prima per `depends_on` obbligatorio, poi `delivery.group` e `delivery.order`; fermati per dipendenze mancanti, cicli, contraddizioni o ambiguità. Processa una SPEC alla volta dal target aggiornato e fermati al primo blocco. Usa branch dedicato e worker implementativo nuovo e isolato. Poi avvia un diverso `repodoc-review-spec-worker` nuovo per il commit esatto. Il revisore è in sola lettura e controlla criteri, correttezza/regressioni, architettura/dipendenze, test e modifiche estranee, restituendo problemi bloccanti, osservazioni e riferimenti verificabili.
+Per più SPEC, ordinale prima per `depends_on` obbligatorio, poi `delivery.group` e `delivery.order`; fermati per dipendenze mancanti, cicli, contraddizioni o ambiguità. Processa una SPEC alla volta dal target aggiornato e fermati al primo blocco. Usa branch dedicato e worker implementativo nuovo e isolato. Quando tutte le SPEC del batch sono implementate, avvia un `repodoc-review-spec-worker` nuovo per i commit esatti del batch su `review/batch-<BATCH_ID>`. Il revisore è in sola lettura e controlla criteri, correttezza/regressioni, architettura/dipendenze, test, deriva nella dimensione/responsabilità unica delle SPEC e modifiche estranee, restituendo problemi bloccanti, osservazioni e riferimenti verificabili per ogni SPEC.
 
-I problemi bloccanti tornano all'implementatore; riesegui i controlli interessati e richiedi una nuova revisione per ogni commit cambiato. Il limite dei cicli è configurabile e vale 3 per default. Al limite conserva branch e checkpoint e segnala il blocco.
+I problemi bloccanti tornano all'implementatore della SPEC interessata; riesegui i controlli interessati e richiedi una nuova revisione, limitata a quella SPEC, per il commit cambiato. Il limite dei cicli è configurabile e vale 3 per SPEC per default. Al limite conserva branch e checkpoint e segnala il blocco.
 
 La policy predefinita è `pull-request` (pull request): apri/aggiorna una PR dedicata e non integrarla. `direct-merge` è consentito solo quando la richiesta lo autorizza; l'autorizzazione per una selezione vale per tutte le SPEC selezionate. Non cambiare globalmente il target predefinito: usa `develop` solo se richiesto o convenzionale. Prima di pubblicare su un target che attiva deployment, ottieni ogni autorizzazione aggiuntiva richiesta.
 
