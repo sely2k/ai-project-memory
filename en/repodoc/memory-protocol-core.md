@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.13.0 -->
+<!-- repodoc:version 1.14.0 -->
 
 # Persistent memory protocol
 
@@ -239,7 +239,9 @@ Implementing code from SPECs is never automatic. Start only on explicit request 
 
 Group the SPECs selected for one implementation run into a **batch**, identified by `BATCH_ID` in `<YYYYMMDD>-<HHmm>` format (the run's own start date and time, e.g. `20261026-1430`). A batch may cover one SPEC or several; it is a unit of planning and review, not a new approval state, and it never encodes the included SPEC ids or ranges — the plan document does.
 
-Before any code changes, a scouting pass produces exactly one reviewable low-level plan for the whole batch at `repodoc/plans/<BATCH_ID>.md`, committed to a dedicated `feature/batch-<BATCH_ID>` branch. Validate `depends_on`, `relations.related`, `delivery.group`/`delivery.order`, and ontology-backed platform suffixes once for the entire batch here, not once per SPEC. For every SPEC in the batch, the plan also reconciles existing state (checkpoint, local/remote branch, PR/merge/tag) into the `absent`/`partial`/`satisfied`/`ambiguous` classification, and lists the concrete files and changes anticipated. Do not start implementation until the plan branch exists and has been reviewed; publishing it is a real action visible to others, like any other.
+Before any code changes, a scouting pass produces exactly one reviewable low-level plan for the whole batch at `repodoc/plans/<BATCH_ID>.md`, committed to a dedicated `feature/batch-<BATCH_ID>` branch. Validate `depends_on`, `relations.related`, `delivery.group`/`delivery.order`, and ontology-backed platform suffixes once for the entire batch here, not once per SPEC. For every SPEC in the batch, the plan also reconciles existing state (checkpoint, local/remote branch, PR/merge/tag) into the `absent`/`partial`/`satisfied`/`ambiguous` classification, and lists the concrete files and changes anticipated.
+
+By default (`RUN_MODE: supervised`) do not start implementation until the plan branch exists and has been reviewed; publishing it is a real action visible to others, like any other. A request that explicitly authorizes running the batch unattended (for example to leave it running overnight, with nobody available to approve the plan) sets `RUN_MODE: unattended`: the orchestrator reports the plan and proceeds straight into implementation instead of pausing for review. Resolve `RUN_MODE`, the target, and the integration policy before the scout runs — every clarifying question belongs before the batch starts, not partway through it. `unattended` only waives the plan-review pause; it never waives a genuine blocker the scout or a worker finds, and it never implies `direct-merge` — a `pull-request` batch run unattended still leaves every PR open for a human to merge.
 
 Each SPEC keeps its own dedicated implementation branch, `feature/<lowercase-spec-id>-<title-slug>`. Once every SPEC in the batch has a pushed implementation, review happens on a dedicated `review/batch-<BATCH_ID>` branch against the batch's aggregated diff. A fix cycle for one SPEC's findings stays scoped to that SPEC's branch and triggers a re-review of only that changed diff, never a re-review of the whole batch.
 

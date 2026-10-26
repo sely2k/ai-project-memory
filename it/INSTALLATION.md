@@ -148,3 +148,7 @@ Riesegui l'installer per aggiungere il nuovo agente `repodoc-scout-spec-worker` 
 ## Note di aggiornamento alla 1.13
 
 Riesegui l'installer per ottenere il nuovo stato SPEC `needs-review` e gli agenti `repodoc-consistency-check`/`repodoc-doctor` aggiornati. Nessuna migrazione delle SPEC è richiesta. Le modifiche dirette al codice fuori da `repodoc-implement-specs` ("vibe coding") restano consentite, ma devono rimanere coerenti con le SPEC esistenti: una modifica che riguarda una SPEC `closed` la riporta a `needs-review` con `implementation.state: partial`, e lavoro nuovo genuino crea una SPEC direttamente a `needs-review` invece che a `draft`/`proposed`/`ready`. `repodoc-consistency-check` applica questo come correzione inequivocabile; `repodoc-doctor` lo segnala soltanto, in sola lettura. Revisionare una SPEC `needs-review` è un passo separato ed esplicito.
+
+## Note di aggiornamento alla 1.14
+
+Riesegui l'installer per ottenere `repodoc-implement-specs` aggiornato. Ora risolve selezione del batch, target, modalità di integrazione e un nuovo `RUN_MODE` tutti in anticipo, prima che lo scout parta, invece di chiedere a metà esecuzione. `RUN_MODE: supervised` (default) mantiene il comportamento pre-1.14: il piano si ferma per revisione. `RUN_MODE: unattended`, impostabile solo con istruzione esplicita (es. "fallo girare di notte"), salta quella pausa ma non un blocco reale, e non implica mai `direct-merge`.

@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.13.0 -->
+<!-- repodoc:version 1.14.0 -->
 
 # Protocollo di memoria persistente
 
@@ -248,7 +248,9 @@ L'implementazione di codice da SPEC non è mai automatica. Iniziala solo su rich
 
 Raggruppa le SPEC selezionate per un'esecuzione implementativa in un **batch**, identificato da `BATCH_ID` nel formato `<YYYYMMDD>-<HHmm>` (data e ora di avvio dell'esecuzione, es. `20261026-1430`). Un batch può coprire una sola SPEC o diverse; è un'unità di pianificazione e revisione, non un nuovo stato di approvazione, e il suo id non codifica mai le SPEC incluse o un loro intervallo — questo lo elenca il piano.
 
-Prima di ogni modifica al codice, una fase di scouting produce un solo piano a basso livello revisionabile per l'intero batch in `repodoc/plans/<BATCH_ID>.md`, committato su un branch dedicato `feature/batch-<BATCH_ID>`. Valida `depends_on`, `relations.related`, `delivery.group`/`delivery.order` e l'ontologia una sola volta per l'intero batch, non per ogni SPEC. Per ogni SPEC del batch, il piano riconcilia anche lo stato esistente (checkpoint, branch locale/remoto, PR/merge/tag) nella classificazione `absent`/`partial`/`satisfied`/`ambiguous`, ed elenca i file e le modifiche previste. Non avviare l'implementazione finché il branch del piano non esiste e non è stato revisionato; pubblicarlo è un'azione reale visibile ad altri, come ogni altra.
+Prima di ogni modifica al codice, una fase di scouting produce un solo piano a basso livello revisionabile per l'intero batch in `repodoc/plans/<BATCH_ID>.md`, committato su un branch dedicato `feature/batch-<BATCH_ID>`. Valida `depends_on`, `relations.related`, `delivery.group`/`delivery.order` e l'ontologia una sola volta per l'intero batch, non per ogni SPEC. Per ogni SPEC del batch, il piano riconcilia anche lo stato esistente (checkpoint, branch locale/remoto, PR/merge/tag) nella classificazione `absent`/`partial`/`satisfied`/`ambiguous`, ed elenca i file e le modifiche previste.
+
+Per default (`RUN_MODE: supervised`) non avviare l'implementazione finché il branch del piano non esiste e non è stato revisionato; pubblicarlo è un'azione reale visibile ad altri, come ogni altra. Una richiesta che autorizza esplicitamente l'esecuzione del batch senza supervisione (per esempio per farlo girare di notte, senza nessuno disponibile ad approvare il piano) imposta `RUN_MODE: unattended`: l'orchestratore riporta il piano e procede direttamente all'implementazione invece di fermarsi per la revisione. Risolvi `RUN_MODE`, il target e la policy di integrazione prima che lo scout parta — ogni domanda di chiarimento va posta prima dell'avvio del batch, non a metà. `unattended` rinuncia solo alla pausa di revisione del piano; non rinuncia mai a un blocco reale che lo scout o un worker trovano, e non implica mai `direct-merge` — un batch `pull-request` eseguito senza supervisione lascia comunque ogni PR aperta per un merge umano.
 
 Ogni SPEC mantiene il proprio branch implementativo dedicato, `feature/<spec-id-minuscolo>-<slug-titolo>`. Quando ogni SPEC del batch ha un'implementazione pubblicata, la revisione avviene su un branch dedicato `review/batch-<BATCH_ID>` contro il diff aggregato del batch. Un ciclo di correzione per i findings di una SPEC resta limitato al branch di quella SPEC e genera una nuova revisione solo di quel diff cambiato, mai del batch intero.
 
