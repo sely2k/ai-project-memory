@@ -36,6 +36,8 @@ Usa questa struttura, creando un'intestazione per ogni gruppo presente in ordine
 
 ## Gruppo 1
 
+Batch completato: `20261026-1430` — tag `batch/20261026-1430/completed`
+
 ### Ambito: catalog
 | Ordine | SPEC | Titolo | Piattaforma | Tipo | Stato | Aggiornata |
 |---|---|---|---|---|---|---|
@@ -150,6 +152,7 @@ Usa le convenzioni di contribuzione documentate dalla repository quando esistono
 - in modalità `direct-merge`, procedi soltanto quando la richiesta corrente autorizza esplicitamente il merge diretto; l'autorizzazione per una selezione vale per l'intero treno. Preferisci un merge commit salvo convenzioni diverse, poi pubblica e verifica il target remoto;
 - prima del push su un target, verifica i trigger di deployment e ottieni ogni autorizzazione aggiuntiva richiesta;
 - dopo revisione indipendente e verifica post-integrazione crea un tag annotato secondo le convenzioni o `spec/<spec-id-minuscolo>/completed`; non sovrascrivere tag esistenti e verifica merge e tag sul remoto;
+- quando tutte le SPEC del batch sono integrate e taggate, crea e pubblica un tag annotato di batch `batch/<BATCH_ID>/completed` sul merge commit dell'ultima SPEC integrata, senza sovrascrivere tag esistenti, e registralo in `implementation.integration.batch_tag` di ogni SPEC, nel piano e, se il batch corrisponde a un gruppo di consegna, sotto l'intestazione di quel gruppo in `specs-index`;
 - elimina branch locali o remoti soltanto quando le convenzioni della repository o l'utente richiedono esplicitamente la pulizia, e soltanto dopo aver verificato l'integrazione riuscita.
 
 La PR RepoDoc persistente non è la PR di implementazione e non va mai usata come branch di codice.
