@@ -52,6 +52,8 @@ Esegui i controlli post-integrazione sul target integrato. Poi crea e pubblica u
 
 Riconcilia la SPEC e l'indice a `completed` solo dopo l'integrazione verificata, registrando merge e tag. Dopo un'interruzione tra merge, tag e aggiornamento memoria, individua e riusa operazioni remote già riuscite invece di ripeterle.
 
+Quando tutte le SPEC del batch sono integrate, verificate e taggate, crea e pubblica un tag annotato di batch `batch/<BATCH_ID>/completed` sul merge commit dell'ultima SPEC integrata (mai spostato, sovrascritto, forzato o riusato; un conflitto è un blocco; verifica sul remoto). Registralo come `implementation.integration.batch_tag` in ogni SPEC del batch e nel piano; se il batch corrisponde a un gruppo di consegna, anche nella riga del gruppo in `specs-index`. Un batch bloccato o parziale non riceve il tag di batch. I worker non creano mai tag né toccano RepoDoc.
+
 Distingui stati `partial`, `verified` e `completed`. Una SPEC tecnicamente completa ma non integrata è `verified`, non `completed`. Riporta per ogni SPEC: la classificazione `absent`/`partial`/`satisfied`/`ambiguous` prodotta dallo scout, invocazioni di worker/revisore, branch, checkpoint/head, controlli, cicli e findings di revisione, PR/merge, verifica post-integrazione, tag, aggiornamento memoria, deviazioni e blocchi. Non dichiarare una prova CLI end-to-end se hai eseguito solo controlli statici dei template.
 
 Se la delega isolata non è disponibile, fermati. Non implementare o revisionare inline, non riusare worker tra SPEC, non pubblicare issue senza richiesta separata, non usare la PR RepoDoc persistente come branch di codice e non scartare lavoro estraneo.

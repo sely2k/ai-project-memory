@@ -36,6 +36,8 @@ Use this shape, creating one heading for every present group in ascending order 
 
 ## Group 1
 
+Batch completed: `20261026-1430` — tag `batch/20261026-1430/completed`
+
 ### Scope: catalog
 | Order | SPEC | Title | Platform | Type | Status | Updated |
 |---|---|---|---|---|---|---|
@@ -150,6 +152,7 @@ Use the repository's documented contribution conventions when they exist. Otherw
 - in `direct-merge` mode, proceed only when the current request explicitly authorizes direct merge; selection-wide authorization applies to the whole train. Prefer a merge commit unless repository conventions say otherwise, then push and verify the remote target;
 - before pushing a target branch, inspect its deployment triggers and obtain any separately required authorization;
 - after independent review and post-integration verification, create an annotated completion tag using repository convention or `spec/<lowercase-spec-id>/completed`; never overwrite an existing tag, and verify both merge and tag remotely;
+- once every SPEC in the batch is integrated and tagged, create and push an annotated batch tag `batch/<BATCH_ID>/completed` on the last integrated SPEC's merge commit, never overwriting an existing tag, and record it in each SPEC's `implementation.integration.batch_tag`, in the plan, and, if the batch corresponds to a delivery group, under that group's heading in `specs-index`;
 - delete local or remote branches only when repository conventions or the user explicitly require cleanup, and only after verifying successful integration.
 
 The persistent RepoDoc PR is not the implementation PR and must never be used as a code branch.

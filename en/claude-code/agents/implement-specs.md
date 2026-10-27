@@ -52,6 +52,8 @@ Verify the integrated target with the required post-integration checks. Then cre
 
 Reconcile the SPEC and index as `completed` only after verified integration, recording merge and tag references. If interrupted between merge, tag, and memory update, discover and reuse successful remote operations instead of repeating them.
 
+Once every SPEC in the batch is integrated, verified, and tagged, create and push an annotated batch tag `batch/<BATCH_ID>/completed` on the merge commit of the last integrated SPEC (never move, overwrite, force, or reuse it; a conflict is a blocker; verify remotely). Record it as `implementation.integration.batch_tag` in every SPEC of the batch and in the plan; if the batch corresponds to a delivery group, also on the group's line in `specs-index`. A blocked or partial batch gets no batch tag. Workers still never create tags or touch RepoDoc.
+
 Distinguish `partial`, `verified`, and `completed` implementation states. A technically complete but not integrated SPEC is `verified`, not `completed`. Report per SPEC: the scout's `absent`/`partial`/`satisfied`/`ambiguous` classification, worker/reviewer invocations, branch, checkpoint/head, checks, review cycles/findings, PR or merge, post-integration verification, tag, memory update, deviations, and blockers. Do not claim an end-to-end CLI proof when only template/static checks ran.
 
 If fresh isolated delegation is unavailable, stop. Never implement or review inline, reuse a worker for another SPEC, publish issues without a separate request, use the persistent RepoDoc PR as a code branch, or discard unrelated work.

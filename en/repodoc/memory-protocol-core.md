@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.14.0 -->
+<!-- repodoc:version 1.15.0 -->
 
 # Persistent memory protocol
 
@@ -185,7 +185,8 @@ implementation:
     target: null
     pull_request: null
     merge_commit: null
-    tag: null
+    tag: null              # annotated SPEC completion tag: finds the SPEC's code from its YAML
+    batch_tag: null        # annotated end-of-batch tag, the same for every SPEC in the batch
 closure:
   reason: null           # completed | cancelled | duplicate | obsolete | other
   note: null
@@ -217,7 +218,7 @@ Maintain one `specs-index` at the path defined by the configured backend. It is 
 
 The group is a global execution barrier: all selected ready SPECs in group 1, regardless of scope, must be implemented and integrated before code is generated for group 2, and so on. SPECs in the same group remain sequential unless parallel work is explicitly requested and dependency-compatible. `delivery.group` and `delivery.order` must be positive integers and the pair must be unique across the whole index; declared dependencies and delivery order must not conflict. SPECs that cannot yet be planned may use `null` values and belong in a final **Unplanned** section grouped by scope; they cannot become `ready` until scope, platform, group, and order are defined.
 
-Each entry contains only the SPEC id linked to its canonical document, title, platform, type, compatible status, approval, publication, implementation state, group, order, and updated date. These fields remain visible but do not determine the index's primary grouping. Never copy summary, motivation, body, tasks, acceptance criteria, or checkpoint evidence into the index. Create the index with the first SPEC and update it whenever a projected field changes. The general memory `index` links to `specs-index`; it does not enumerate individual SPECs.
+Each entry contains only the SPEC id linked to its canonical document, title, platform, type, compatible status, approval, publication, implementation state, group, order, and updated date. These fields remain visible but do not determine the index's primary grouping. Never copy summary, motivation, body, tasks, acceptance criteria, or checkpoint evidence into the index. Create the index with the first SPEC and update it whenever a projected field changes. If a batch corresponds to a delivery group (every not-yet-closed SPEC of the `delivery.group`, the others already `closed`), `specs-index` shows under that group's heading the line `Batch completed: `<BATCH_ID>` — tag `batch/<BATCH_ID>/completed``; it is the only checkpoint datum allowed in the index. The general memory `index` links to `specs-index`; it does not enumerate individual SPECs.
 
 Reference other specs in `relations` by their `id`, so links stay valid before any issue exists. Resolve them to real issue numbers only when publishing, by looking up each referenced spec's `github.issue`.
 
@@ -261,7 +262,9 @@ Blocking findings return to the implementer of the affected SPEC; affected check
 
 The default integration policy is `pull-request` (pull request): open/update a dedicated PR and do not merge. `direct-merge` is allowed only when the request explicitly authorizes it; selection-wide authorization applies to every selected SPEC without repeated prompts. Do not globally change the default target: use `develop` only when requested or conventional. Before pushing a target that triggers deployment, obtain any additional authorization required by repository policy.
 
-After a passing review, preserve the SPEC boundary in history, preferring a merge commit unless conventions differ. Verify required checks on the integrated target, push and verify the remote merge, then create and push an annotated completion tag on the resulting commit. Use repository naming, otherwise `spec/<lowercase-spec-id>/completed`. Never overwrite, move, force, or reuse an existing tag; verify it remotely. A completion tag identifies SPEC completion, not a release or deployment. Only then set `implementation.state: completed`, record merge/tag, set `closure.reason: completed` and compatible `status: closed`, and update the index. Never discard unrelated work or claim an end-to-end proof from static template checks.
+After a passing review, preserve the SPEC boundary in history, preferring a merge commit unless conventions differ. Verify required checks on the integrated target, push and verify the remote merge, then create and push an annotated completion tag on the resulting commit. Use repository naming, otherwise `spec/<lowercase-spec-id>/completed`. Never overwrite, move, force, or reuse an existing tag; verify it remotely. A completion tag identifies SPEC completion, not a release or deployment; record it in `implementation.integration.tag` so the SPEC's code can be found from its YAML. Only then set `implementation.state: completed`, record merge/tag, set `closure.reason: completed` and compatible `status: closed`, and update the index. Never discard unrelated work or claim an end-to-end proof from static template checks.
+
+Once every SPEC in the batch is integrated, verified, and tagged, create and push an annotated batch tag `batch/<BATCH_ID>/completed` on the merge commit of the last integrated SPEC. Never overwrite, move, force, or reuse a tag; verify it remotely: a conflict is a blocker. Record it in `implementation.integration.batch_tag` of every SPEC in the batch and in the plan `repodoc/plans/<BATCH_ID>.md`; if the batch corresponds to a group, also in `specs-index`. A blocked or partial batch gets no batch tag, and SPECs already integrated keep their own tag. Like the SPEC tag, it identifies completion, not a release or deployment.
 
 ## Code changes outside the SPEC workflow
 

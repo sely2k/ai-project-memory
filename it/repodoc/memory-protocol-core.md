@@ -1,4 +1,4 @@
-<!-- repodoc:version 1.14.0 -->
+<!-- repodoc:version 1.15.0 -->
 
 # Protocollo di memoria persistente
 
@@ -194,7 +194,8 @@ implementation:
     target: null
     pull_request: null
     merge_commit: null
-    tag: null
+    tag: null              # tag annotato di completamento della SPEC: ritrova il codice dal suo YAML
+    batch_tag: null        # tag annotato di fine batch, uguale per tutte le SPEC del batch
 closure:
   reason: null           # completed | cancelled | duplicate | obsolete | other
   note: null
@@ -226,7 +227,7 @@ Mantieni un solo `specs-index` nel percorso definito dal backend configurato. È
 
 Il gruppo è una barriera di esecuzione globale: tutte le SPEC ready selezionate del gruppo 1, qualunque sia il loro ambito, devono essere implementate e integrate prima di generare codice per il gruppo 2, e così via. Le SPEC dello stesso gruppo restano sequenziali salvo richiesta esplicita di parallelismo e compatibilità delle dipendenze. `delivery.group` e `delivery.order` devono essere interi positivi e la coppia deve essere univoca nell'intero indice; dipendenze dichiarate e ordine di consegna non possono contraddirsi. Le SPEC non ancora pianificabili possono usare valori `null` e vanno nella sezione finale **Non pianificate**, raggruppate per ambito; non possono passare a `ready` finché ambito, piattaforma, gruppo e ordine non sono definiti.
 
-Ogni voce contiene soltanto l'id collegato al documento canonico, titolo, piattaforma, tipo, stato compatibile, approvazione, pubblicazione, stato implementativo, gruppo, ordine e data. Questi campi restano visibili ma non determinano il raggruppamento principale. Non copiare sintesi, motivazione, body, attività, criteri o evidenze di checkpoint. Aggiorna l'indice quando cambia un campo proiettato. L'`index` generale collega `specs-index`; non elenca le singole SPEC.
+Ogni voce contiene soltanto l'id collegato al documento canonico, titolo, piattaforma, tipo, stato compatibile, approvazione, pubblicazione, stato implementativo, gruppo, ordine e data. Questi campi restano visibili ma non determinano il raggruppamento principale. Non copiare sintesi, motivazione, body, attività, criteri o evidenze di checkpoint. Aggiorna l'indice quando cambia un campo proiettato. Se un batch corrisponde a un gruppo di consegna (tutte le SPEC non ancora chiuse del `delivery.group`, con le altre già `closed`), `specs-index` riporta sotto l'intestazione di quel gruppo la riga `Batch completato: `<BATCH_ID>` — tag `batch/<BATCH_ID>/completed``; è l'unico dato di checkpoint ammesso nell'indice. L'`index` generale collega `specs-index`; non elenca le singole SPEC.
 
 Fai riferimento alle altre specifiche in `relations` tramite il loro `id`, così i collegamenti restano validi prima che esista una issue. Risolvili in numeri di issue reali solo al momento della pubblicazione, leggendo il `github.issue` di ciascuna specifica referenziata.
 
@@ -270,7 +271,9 @@ I problemi bloccanti tornano all'implementatore della SPEC interessata; riesegui
 
 La policy predefinita è `pull-request` (pull request): apri/aggiorna una PR dedicata e non integrarla. `direct-merge` è consentito solo quando la richiesta lo autorizza; l'autorizzazione per una selezione vale per tutte le SPEC selezionate. Non cambiare globalmente il target predefinito: usa `develop` solo se richiesto o convenzionale. Prima di pubblicare su un target che attiva deployment, ottieni ogni autorizzazione aggiuntiva richiesta.
 
-Dopo una revisione positiva conserva il confine della SPEC nella storia, preferendo merge commit salvo convenzioni diverse. Verifica i controlli sul target integrato, pubblica e verifica il merge remoto, poi crea e pubblica un tag annotato sul commit risultante. Usa il naming della repository, altrimenti `spec/<spec-id-minuscolo>/completed`. Non sovrascrivere, spostare, forzare o riusare tag; verificalo sul remoto. Il tag identifica il completamento della SPEC, non una release o un deployment. Solo allora imposta `implementation.state: completed`, registra merge/tag, `closure.reason: completed`, lo `status: closed` compatibile e aggiorna l'indice. Non scartare lavoro estraneo né dichiarare E2E sulla base di soli controlli statici.
+Dopo una revisione positiva conserva il confine della SPEC nella storia, preferendo merge commit salvo convenzioni diverse. Verifica i controlli sul target integrato, pubblica e verifica il merge remoto, poi crea e pubblica un tag annotato sul commit risultante. Usa il naming della repository, altrimenti `spec/<spec-id-minuscolo>/completed`. Non sovrascrivere, spostare, forzare o riusare tag; verificalo sul remoto. Il tag identifica il completamento della SPEC, non una release o un deployment; registralo in `implementation.integration.tag` così il codice della SPEC si ritrova dal suo YAML. Solo allora imposta `implementation.state: completed`, registra merge/tag, `closure.reason: completed`, lo `status: closed` compatibile e aggiorna l'indice. Non scartare lavoro estraneo né dichiarare E2E sulla base di soli controlli statici.
+
+Quando tutte le SPEC del batch sono integrate, verificate e taggate, crea e pubblica un tag annotato di batch `batch/<BATCH_ID>/completed` sul merge commit dell'ultima SPEC integrata. Non sovrascrivere, spostare, forzare o riusare tag; verificalo sul remoto: un conflitto è un blocco. Registra il tag in `implementation.integration.batch_tag` di ogni SPEC del batch e nel piano `repodoc/plans/<BATCH_ID>.md`; se il batch corrisponde a un gruppo, anche nello `specs-index`. Un batch bloccato o parziale non riceve il tag di batch e le SPEC già integrate mantengono il proprio tag. Come il tag di SPEC, identifica il completamento, non una release o un deployment.
 
 ## Modifiche al codice fuori dal workflow SPEC
 

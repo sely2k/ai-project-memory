@@ -152,3 +152,7 @@ Riesegui l'installer per ottenere il nuovo stato SPEC `needs-review` e gli agent
 ## Note di aggiornamento alla 1.14
 
 Riesegui l'installer per ottenere `repodoc-implement-specs` aggiornato. Ora risolve selezione del batch, target, modalità di integrazione e un nuovo `RUN_MODE` tutti in anticipo, prima che lo scout parta, invece di chiedere a metà esecuzione. `RUN_MODE: supervised` (default) mantiene il comportamento pre-1.14: il piano si ferma per revisione. `RUN_MODE: unattended`, impostabile solo con istruzione esplicita (es. "fallo girare di notte"), salta quella pausa ma non un blocco reale, e non implica mai `direct-merge`.
+
+## Note di aggiornamento alla 1.15
+
+Riesegui l'installer per ottenere protocollo e `repodoc-implement-specs` aggiornati. Dopo che ogni SPEC di un batch è integrata, verificata e taggata, viene creato un tag annotato di batch `batch/<BATCH_ID>/completed` sul merge commit dell'ultima SPEC integrata, registrato in `implementation.integration.batch_tag` di ogni SPEC, nel piano e — se il batch corrisponde a un gruppo di consegna — sotto quel gruppo in `repodoc/specs/index.md`. I batch bloccati o parziali non ricevono il tag di batch. Nessuna migrazione richiesta.
